@@ -21,23 +21,18 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.action.Input;
-import de.escalon.hypermedia.affordance.*;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
+import de.escalon.hypermedia.affordance.Affordance;
+import de.escalon.hypermedia.affordance.DataType;
+import de.escalon.hypermedia.affordance.PartialUriTemplateComponents;
+import de.escalon.hypermedia.affordance.TypedResource;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
 import de.escalon.hypermedia.hydra.serialize.LdContext;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.MethodParameter;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.hateoas.IanaRels;
-import org.springframework.hateoas.Link;
-import org.springframework.util.Assert;
-
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -48,13 +43,32 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.MethodParameter;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
+import org.springframework.util.Assert;
 
 /**
  * Serializer to convert Link to json-ld representation. Created by dschulten on 19.09.2014.
  */
-public class LinkListSerializer extends StdSerializer<List<Link>> {
+public class LinkListSerializer extends StdSerializer<Links> {
 
+    public static final String HYDRA_PROPERTY = "hydra:property";
+    public static final String TYPE = "@type";
+    public static final String SCHEMA = "schema:";
     Logger LOG = LoggerFactory.getLogger(LinkListSerializer.class);
 
     private static final String IANA_REL_PREFIX = "urn:iana:link-relations:";
@@ -65,14 +79,14 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     }
 
     @Override
-    public void serialize(List<Link> links, JsonGenerator jgen,
+    public void serialize(Links links, JsonGenerator jgen,
                           SerializerProvider serializerProvider) throws IOException {
 
         try {
-            Collection<Link> simpleLinks = new ArrayList<Link>();
-            Collection<Affordance> affordances = new ArrayList<Affordance>();
-            Collection<Link> templatedLinks = new ArrayList<Link>();
-            Collection<Affordance> collectionAffordances = new ArrayList<Affordance>();
+            Collection<Link> simpleLinks = new ArrayList<>();
+            Collection<Affordance> affordances = new ArrayList<>();
+            Collection<Link> templatedLinks = new ArrayList<>();
+            Collection<Affordance> collectionAffordances = new ArrayList<>();
             Link selfRel = null;
             for (Link link : links) {
                 if (link instanceof Affordance) {
@@ -83,7 +97,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         if (affordance.getUriTemplateComponents()
                                 .hasVariables()) {
                             // TODO resolve rel against context
-                            if ("hydra:search".equals(affordance.getRel())
+                            if ("hydra:search".equals(affordance.getRel().value())
                                     || Cardinality.SINGLE == affordance
                                     .getCardinality()) {
                                 templatedLinks.add(affordance);
@@ -111,7 +125,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 } else {
                     simpleLinks.add(link);
                 }
-                if ("self".equals(link.getRel())) {
+                if ("self".equals(link.getRel().value())) {
                     selfRel = link;
                 }
             }
@@ -121,7 +135,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 // only optional unsatisfied variables
                 ActionDescriptor actionDescriptorForHttpGet = getActionDescriptorForHttpGet(templatedLink);
                 // TODO handle rev here
-                String rel = templatedLink.getRel();
+                String rel = templatedLink.getRel().value();
                 writeIriTemplate(rel, templatedLink.getHref(), templatedLink.getVariableNames(),
                         actionDescriptorForHttpGet, jgen);
             }
@@ -158,7 +172,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     // do we have a collection holder which is not owner of the affordance?
                     TypedResource collectionHolder = collectionAffordance.getCollectionHolder();
                     if (collectionAffordance.getRev() != null) {
-                        jgen.writeStringField("hydra:property", collectionAffordance.getRev());
+                        jgen.writeStringField(HYDRA_PROPERTY, collectionAffordance.getRev());
                         if (collectionHolder != null) {
                             // can't use writeObjectField, it won't inherit the context stack
                             writeCollectionHolder("hydra:object", collectionHolder, jgen);
@@ -166,7 +180,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                             jgen.writeStringField("hydra:object", selfRel.getHref());
                         }
                     } else if (collectionAffordance.getRel() != null) {
-                        jgen.writeStringField("hydra:property", collectionAffordance.getRel());
+                        jgen.writeStringField(HYDRA_PROPERTY, collectionAffordance.getRel().value());
                         if (collectionHolder != null) {
                             // can't use writeObjectField, it won't inherit the context stack
                             writeCollectionHolder("hydra:subject", collectionHolder, jgen);
@@ -193,11 +207,11 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             }
 
             for (Affordance affordance : affordances) {
-                final String rel = affordance.getRel();
+                final String rel = affordance.getRel().value();
                 List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
 
                 if (!actionDescriptors.isEmpty()) {
-                    if (!Link.REL_SELF.equals(rel)) {
+                    if (!IanaLinkRelations.SELF_VALUE.equals(rel)) {
                         jgen.writeObjectFieldStart(rel); // begin rel
                     }
                     jgen.writeStringField(JsonLdKeywords.AT_ID, affordance.getHref());
@@ -210,18 +224,18 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 if (!actionDescriptors.isEmpty()) {
                     jgen.writeEndArray(); // end hydra:operation
 
-                    if (!Link.REL_SELF.equals(rel)) {
+                    if (!IanaLinkRelations.SELF_VALUE.equals(rel)) {
                         jgen.writeEndObject(); // end rel
                     }
                 }
             }
 
             for (Link simpleLink : simpleLinks) {
-                final String rel = simpleLink.getRel();
-                if (Link.REL_SELF.equals(rel)) {
+                final String rel = simpleLink.getRel().value();
+                if (IanaLinkRelations.SELF_VALUE.equals(rel)) {
                     jgen.writeStringField("@id", simpleLink.getHref());
                 } else {
-                    String linkAttributeName = IanaRels.isIanaRel(rel) ? IANA_REL_PREFIX + rel : rel;
+                    String linkAttributeName = IanaLinkRelations.isIanaRel(rel) ? IANA_REL_PREFIX + rel : rel;
                     jgen.writeObjectFieldStart(linkAttributeName);
                     jgen.writeStringField("@id", simpleLink.getHref());
                     jgen.writeEndObject();
@@ -237,7 +251,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                                   JsonGenerator jgen) throws IOException {
         jgen.writeObjectFieldStart(rel);
 
-        jgen.writeStringField("@type", "hydra:IriTemplate");
+        jgen.writeStringField(TYPE, "hydra:IriTemplate");
         jgen.writeStringField("hydra:template", href);
         jgen.writeArrayFieldStart("hydra:mapping");
         writeHydraVariableMapping(jgen, actionDescriptorForHttpGet, variableNames);
@@ -281,7 +295,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
             final String semanticActionType = actionDescriptor.getSemanticActionType();
             if (semanticActionType != null) {
-                jgen.writeStringField("@type", semanticActionType);
+                jgen.writeStringField(TYPE, semanticActionType);
             }
             jgen.writeStringField("hydra:method", actionDescriptor.getHttpMethod());
 
@@ -299,7 +313,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     typeName = requestBodyInputParameter.getParameterType()
                             .getSimpleName();
                 }
-                jgen.writeStringField("@type", typeName);
+                jgen.writeStringField(TYPE, typeName);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
                 // TODO check need for allRootParameters and requestBodyInputParameter here:
@@ -441,7 +455,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 //                            }
             } else {
                 jgen.writeStartObject();
-                jgen.writeStringField("hydra:property", annotatedParameter.getParameterName());
+                jgen.writeStringField(HYDRA_PROPERTY, annotatedParameter.getParameterName());
                 // TODO: is the property required -> for bean props we need the Access annotation to express that
 
                 Expose expose = AnnotationUtils.getAnnotation(parameterType, Expose.class);
@@ -473,7 +487,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                             String multipleValueProp = getPropertyOrClassNameInVocab(currentVocab,
                                     "multipleValues",
                                     LdContextFactory.HTTP_SCHEMA_ORG,
-                                    "schema:");
+                                    SCHEMA);
                             jgen.writeBooleanField(multipleValueProp, true);
                         }
                     }
@@ -482,7 +496,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     subClass = parameterType.getSimpleName();
                 }
                 jgen.writeObjectFieldStart(getPropertyOrClassNameInVocab(currentVocab, "rangeIncludes",
-                        LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
+                        LdContextFactory.HTTP_SCHEMA_ORG, SCHEMA));
 
                 jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab,
                         "subClassOf",
@@ -544,11 +558,11 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             // jgen.writeString("hydra:SupportedProperty");
 
             jgen.writeStringField(JsonLdKeywords.AT_TYPE, getPropertyOrClassNameInVocab(currentVocab,
-                    "PropertyValueSpecification", LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
+                    "PropertyValueSpecification", LdContextFactory.HTTP_SCHEMA_ORG, SCHEMA));
 
             //jgen.writeEndArray();
         }
-        jgen.writeStringField("hydra:property", propertyName);
+        jgen.writeStringField(HYDRA_PROPERTY, propertyName);
 
         writePossiblePropertyValues(jgen, currentVocab, actionInputParameter, possiblePropertyValues);
 
@@ -575,7 +589,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         if (actionInputParameter.isArrayOrCollection()) {
             jgen.writeBooleanField(getPropertyOrClassNameInVocab(currentVocab, "multipleValues",
-                    LdContextFactory.HTTP_SCHEMA_ORG, "schema:"), true);
+                    LdContextFactory.HTTP_SCHEMA_ORG, SCHEMA), true);
         }
 
 
@@ -610,7 +624,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 // only write defaultValue for array of scalars
                 if (DataType.isSingleValueType(componentType)) {
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",
-                            LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
+                            LdContextFactory.HTTP_SCHEMA_ORG, SCHEMA));
                     jgen.writeStartArray();
                     for (Object callValue : callValues) {
                         writeScalarValue(jgen, callValue, componentType);
@@ -619,7 +633,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 }
             } else {
                 jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",
-                        LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
+                        LdContextFactory.HTTP_SCHEMA_ORG, SCHEMA));
 
                 writeScalarValue(jgen, actionInputParameter.getValue(), actionInputParameter
                         .getParameterType());
@@ -633,7 +647,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 final Object constraint = inputConstraints.get(keyToAppendValue);
                 if (constraint != null) {
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, keyToAppendValue + "Value",
-                            LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
+                            LdContextFactory.HTTP_SCHEMA_ORG, SCHEMA));
                     jgen.writeNumber(constraint
                             .toString());
                 }
@@ -646,7 +660,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 if (constraint != null) {
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "value" + StringUtils.capitalize
                                     (keyToPrependValue),
-                            LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
+                            LdContextFactory.HTTP_SCHEMA_ORG, SCHEMA));
                     if (Input.PATTERN.equals(keyToPrependValue)) {
                         jgen.writeString(constraint.toString());
                     } else {
@@ -723,12 +737,12 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 // only unsatisfied parameters become hydra variables
                 if (annotatedParameter != null && annotatedParameter.getValue() == null) {
                     jgen.writeStartObject();
-                    jgen.writeStringField("@type", "hydra:IriTemplateMapping");
+                    jgen.writeStringField(TYPE, "hydra:IriTemplateMapping");
                     jgen.writeStringField("hydra:variable", annotatedParameter.getParameterName());
                     jgen.writeBooleanField("hydra:required",
                             annotatedParameter
                                     .isRequired());
-                    jgen.writeStringField("hydra:property",
+                    jgen.writeStringField(HYDRA_PROPERTY,
                             getExposedPropertyOrParamName(annotatedParameter));
                     jgen.writeEndObject();
                 }

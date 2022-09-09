@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.fasterxml.jackson.databind.util.NameTransformer;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 
-import javax.xml.validation.TypeInfoProvider;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -140,7 +139,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 
 		Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
 		if (contextStack == null) {
-			contextStack = new ArrayDeque<LdContext>();
+			contextStack = new ArrayDeque<>();
 			serializerProvider.setAttribute(KEY_LD_CONTEXT, contextStack);
 		}
 
@@ -186,7 +185,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
         // adds @type attribute, reflecting the simple name of the class or the exposed annotation on the class.
         final Expose classExpose = findAnnotation(bean.getClass(), Expose.class);
-        // TODO allow to search up the hierarchy for ResourceSupport mixins and cache found result?
+        // TODO allow to search up the hierarchy for RepresentationModel mixins and cache found result?
         final Class<?> mixin = provider.getConfig()
                 .findMixInClassFor(bean.getClass());
         final Expose mixinExpose = findAnnotation(mixin, Expose.class);
@@ -222,7 +221,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         Map<String, Object> termsOfBean = ldContextFactory.getTerms(mixinSource, bean, mixInClass);
         Map<String, Object> newTermsOfBean;
         if (parentContext != null) {
-            newTermsOfBean = new LinkedHashMap<String, Object>();
+            newTermsOfBean = new LinkedHashMap<>();
             for (Map.Entry<String, Object> termEntry : termsOfBean.entrySet()) {
                 String term = termEntry.getKey();
                 Object value = termEntry.getValue();
@@ -240,11 +239,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         // If it is in the same vocab: no context
         // If the terms are already defined in the context: no context
         boolean mustWriteContext;
-        if (parentContext == null || !parentContext.contains(currentContext)) {
-            mustWriteContext = true;
-        } else {
-            mustWriteContext = false;
-        }
+		mustWriteContext = parentContext == null || !parentContext.contains(currentContext);
 
         if (mustWriteContext) {
             // begin context
@@ -279,9 +274,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 
     @Override
     public JsonSerializer<Object> unwrappingSerializer(NameTransformer unwrapper) {
-        UnwrappingJacksonHydraSerializer unwrappingJacksonHydraSerializer = new UnwrappingJacksonHydraSerializer
-                (this, proxyUnwrapper);
-        return unwrappingJacksonHydraSerializer;
+    return new UnwrappingJacksonHydraSerializer(this, proxyUnwrapper);
     }
 
     @Override

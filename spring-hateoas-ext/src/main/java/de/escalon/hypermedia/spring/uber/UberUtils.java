@@ -23,9 +23,9 @@ import de.escalon.hypermedia.spring.SpringActionDescriptor;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -43,7 +43,7 @@ public class UberUtils {
 
     }
 
-    static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
+    static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<>(Arrays.asList("class", "links", "id"));
     static final String MODEL_FORMAT = "%s={%s}";
 
 
@@ -63,13 +63,13 @@ public class UberUtils {
 
         try {
             // TODO: move all returns to else branch of property descriptor handling
-            if (object instanceof Resource) {
-                Resource<?> resource = (Resource<?>) object;
+            if (object instanceof EntityModel) {
+                EntityModel<?> resource = (EntityModel<?>) object;
                 objectNode.addLinks(resource.getLinks());
                 toUberData(objectNode, resource.getContent());
                 return;
-            } else if (object instanceof Resources) {
-                Resources<?> resources = (Resources<?>) object;
+            } else if (object instanceof CollectionModel) {
+                CollectionModel<?> resources = (CollectionModel<?>) object;
 
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
 
@@ -78,8 +78,8 @@ public class UberUtils {
                 Collection<?> content = resources.getContent();
                 toUberData(objectNode, content);
                 return;
-            } else if (object instanceof ResourceSupport) {
-                ResourceSupport resource = (ResourceSupport) object;
+            } else if (object instanceof RepresentationModel) {
+                RepresentationModel resource = (RepresentationModel) object;
 
                 objectNode.addLinks(resource.getLinks());
 
@@ -168,23 +168,14 @@ public class UberUtils {
     }
 
     private static boolean isEmptyCollectionOrMap(Object content, Class<?> type) {
-        if (Collection.class.isAssignableFrom(type)) {
+        if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
             if (content == null) {
                 return true;
             } else {
-                if (((List) content).isEmpty()) {
-                    return true;
-                }
-            }
-        } else if (Map.class.isAssignableFrom(type)) {
-            if (content == null) {
-                return true;
-            } else {
-                if (((List) content).isEmpty()) {
-                    return true;
-                }
+                return ((List) content).isEmpty();
             }
         }
+
         return false;
     }
 
@@ -232,31 +223,29 @@ public class UberUtils {
         UberNode uberLink = new UberNode();
         uberLink.setRel(rels);
         PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(href).expand(Collections
-                .<String, Object>emptyMap());
+                .emptyMap());
         uberLink.setUrl(partialUriTemplateComponents.toString());
         uberLink.setTemplated(partialUriTemplateComponents.hasVariables() ? Boolean.TRUE : null);
         uberLink.setModel(getModelProperty(href, actionDescriptor));
-        if (actionDescriptor != null) {
-            RequestMethod requestMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
-            uberLink.setAction(UberAction.forRequestMethod(requestMethod));
-        }
+        RequestMethod requestMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
+        uberLink.setAction(UberAction.forRequestMethod(requestMethod));
         return uberLink;
     }
 
     private static String getModelProperty(String href, ActionDescriptor actionDescriptor) {
 
         RequestMethod httpMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
-        StringBuffer model = new StringBuffer();
+        StringBuilder model = new StringBuilder();
 
         switch (httpMethod) {
             case POST:
             case PUT:
             case PATCH: {
-                List<UberField> uberFields = new ArrayList<UberField>();
+                List<UberField> uberFields = new ArrayList<>();
                 recurseBeanCreationParams(uberFields, actionDescriptor.getRequestBody()
                         .getParameterType(), actionDescriptor, actionDescriptor.getRequestBody(), actionDescriptor
                         .getRequestBody()
-                        .getValue(), "", Collections.<String>emptySet());
+                        .getValue(), "", Collections.emptySet());
                 for (UberField uberField : uberFields) {
                     if (model.length() > 0) {
                         model.append("&");
@@ -409,7 +398,7 @@ public class UberUtils {
                                 " are annotated with @JsonProperty");
             }
 
-            Set<String> knownConstructorFields = new HashSet<String>(uberFields.size());
+            Set<String> knownConstructorFields = new HashSet<>(uberFields.size());
             for (UberField sirenField : uberFields) {
                 knownConstructorFields.add(sirenField.getName());
             }
@@ -448,7 +437,7 @@ public class UberUtils {
                     .name());
             PartialUriTemplate partialUriTemplate = new PartialUriTemplate(link.getHref());
             PartialUriTemplateComponents parts = partialUriTemplate.asComponents();
-            actionDescriptors = Arrays.asList((ActionDescriptor) actionDescriptor);
+            actionDescriptors = Collections.singletonList(actionDescriptor);
         }
         return actionDescriptors;
     }
@@ -458,7 +447,7 @@ public class UberUtils {
         if (link instanceof Affordance) {
             rels = ((Affordance) link).getRels();
         } else {
-            rels = Arrays.asList(link.getRel());
+            rels = Collections.singletonList(link.getRel().value());
         }
         return rels;
     }
@@ -486,8 +475,8 @@ public class UberUtils {
             }
         } else {
             Object callValueBean;
-            if (propertyValue instanceof Resource) {
-                callValueBean = ((Resource) propertyValue).getContent();
+            if (propertyValue instanceof EntityModel) {
+                callValueBean = ((EntityModel) propertyValue).getContent();
             } else {
                 callValueBean = propertyValue;
             }

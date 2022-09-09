@@ -13,22 +13,19 @@
 
 package de.escalon.hypermedia.spring.uber;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.NonTypedScalarSerializerBase;
-
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 
-public class NullValueSerializer extends NonTypedScalarSerializerBase<UberNode.NullValue> {
+public class NullValueSerializer extends StdSerializer<UberNode.NullValue> {
 
     protected NullValueSerializer() {
         super(UberNode.NullValue.class);
     }
 
     @Override
-    public void serialize(UberNode.NullValue value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
-            JsonGenerationException {
+    public void serialize(UberNode.NullValue value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeNull();
     }
 }

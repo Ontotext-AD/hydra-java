@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import de.escalon.hypermedia.spring.DocumentationProvider;
-import org.springframework.hateoas.RelProvider;
+import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -17,6 +17,7 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import org.springframework.lang.NonNull;
 
 /**
  * Http message converter which converts Spring Hateoas resource beans to siren messages. Treats the following rels as
@@ -38,7 +39,7 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
      * @param relProvider
      *         to determine siren class
      */
-    public void setRelProvider(RelProvider relProvider) {
+    public void setRelProvider(LinkRelationProvider relProvider) {
         sirenUtils.setRelProvider(relProvider);
     }
 
@@ -73,14 +74,14 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
     }
 
 
+    @NonNull
     @Override
     protected boolean supports(Class<?> clazz) {
         return true;
     }
 
     @Override
-    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage) throws IOException,
-            HttpMessageNotReadableException {
+    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage) throws HttpMessageNotReadableException {
         return null;
     }
 
@@ -116,8 +117,8 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
      * @return the JSON encoding to use (never {@code null})
      */
     protected JsonEncoding getJsonEncoding(MediaType contentType) {
-        if (contentType != null && contentType.getCharSet() != null) {
-            Charset charset = contentType.getCharSet();
+        if (contentType != null && contentType.getCharset() != null) {
+            Charset charset = contentType.getCharset();
             for (JsonEncoding encoding : JsonEncoding.values()) {
                 if (charset.name()
                         .equals(encoding.getJavaName())) {

@@ -13,23 +13,25 @@
 
 package de.escalon.hypermedia.spring.hydra;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.escalon.hypermedia.hydra.mapping.ContextProvider;
+import java.util.Arrays;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-
-import java.util.List;
+import org.springframework.hateoas.Links;
 
 /**
  * Mixin for json-ld serialization of Resource. Created by dschulten on 14.09.2014.
  */
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
-public abstract class ResourceMixin<T> extends Resource<T> {
+@JsonInclude
+public abstract class ResourceMixin<T> extends EntityModel<T> {
 
     @SuppressWarnings("unused")
     public ResourceMixin(T content, Link... links) {
-        super(content, links);
+        super(content, Arrays.asList(links));
     }
 
     @SuppressWarnings("unused")
@@ -37,10 +39,11 @@ public abstract class ResourceMixin<T> extends Resource<T> {
         super(content, links);
     }
 
+    @NotNull
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
-    public List<Link> getLinks() {
+    public Links getLinks() {
         return super.getLinks();
     }
 

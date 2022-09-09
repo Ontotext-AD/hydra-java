@@ -19,9 +19,10 @@ import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
 import de.escalon.hypermedia.spring.DocumentationProvider;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import java.nio.charset.StandardCharsets;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -46,7 +47,7 @@ import java.util.Map.Entry;
 
 /**
  * Message converter which represents a restful API as xhtml which can be used by the browser or a rest client. Converts
- * java beans and spring-hateoas Resources to xhtml and maps the body of x-www-form-urlencoded requests to RequestBody
+ * java beans and spring-hateoas CollectionModel to xhtml and maps the body of x-www-form-urlencoded requests to RequestBody
  * method parameters. The media-type xhtml does not officially support methods other than GET or POST, therefore we must
  * &quot;tunnel&quot; other methods when this converter is used with the browser. Spring's {@link
  * org.springframework.web.filter.HiddenHttpMethodFilter} allows to do that with relative ease.
@@ -55,7 +56,7 @@ import java.util.Map.Entry;
  */
 public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object> {
 
-    private Charset charset = Charset.forName("UTF-8");
+    private Charset charset = StandardCharsets.UTF_8;
     private String methodParam = "_method";
     private List<String> stylesheets = Collections.emptyList();
 
@@ -106,7 +107,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             // TODO recognize this more safely or make the filter mandatory
             MediaType contentType = inputMessage.getHeaders()
                     .getContentType();
-            Charset charset = contentType.getCharSet() != null ? contentType.getCharSet() : this.charset;
+            Charset charset = contentType.getCharset() != null ? contentType.getCharset() : this.charset;
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) inputMessage;
             HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
             is = getBodyFromServletRequestParameters(servletRequest, charset.displayName(Locale.US));
@@ -159,7 +160,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
         String[] pairs = StringUtils.tokenizeToStringArray(body, "&");
 
-        MultiValueMap<String, String> formValues = new LinkedMultiValueMap<String, String>(pairs.length);
+        MultiValueMap<String, String> formValues = new LinkedMultiValueMap<>(pairs.length);
 
         for (String pair : pairs) {
             int idx = pair.indexOf('=');
@@ -251,7 +252,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
     protected void writeInternal(Object t, HttpOutputMessage outputMessage) throws IOException,
             HttpMessageNotWritableException {
 
-        XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody(), "UTF-8"));
+        XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody(), StandardCharsets.UTF_8));
         xhtmlWriter.setMethodParam(methodParam);
         xhtmlWriter.setStylesheets(stylesheets);
         xhtmlWriter.setDocumentationProvider(documentationProvider);
@@ -262,7 +263,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         xhtmlWriter.flush();
     }
 
-    static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
+    static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<>(Arrays.asList("class", "links", "id"));
 
 
     private void writeNewResource(XhtmlWriter writer, Object object) throws IOException {
@@ -284,16 +285,16 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             return;
         }
         try {
-            if (object instanceof Resource) {
-                Resource<?> resource = (Resource<?>) object;
+            if (object instanceof EntityModel) {
+                EntityModel<?> resource = (EntityModel<?>) object;
                 writer.beginListItem();
 
                 writeResource(writer, resource.getContent());
                 writer.writeLinks(resource.getLinks());
 
                 writer.endListItem();
-            } else if (object instanceof Resources) {
-                Resources<?> resources = (Resources<?>) object;
+            } else if (object instanceof CollectionModel) {
+                CollectionModel<?> resources = (CollectionModel<?>) object;
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
 
                 writer.beginListItem();
@@ -306,8 +307,8 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 writer.writeLinks(resources.getLinks());
 
                 writer.endListItem();
-            } else if (object instanceof ResourceSupport) {
-                ResourceSupport resource = (ResourceSupport) object;
+            } else if (object instanceof RepresentationModel) {
+                RepresentationModel resource = (RepresentationModel) object;
                 writer.beginListItem();
 
                 writeObject(writer, resource);
@@ -319,7 +320,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 for (Object item : collection) {
                     writeResource(writer, item);
                 }
-            } else { // TODO: write li for simple objects in Resources Collection
+            } else { // TODO: write li for simple objects in CollectionModel Collection
                 writeObject(writer, object);
             }
         } catch (Exception ex) {
@@ -470,7 +471,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
      *         .4/css/bootstrap.min.css&quot;
      */
     public void setStylesheets(List<String> stylesheets) {
-        Assert.notNull(stylesheets);
+        Assert.notNull(stylesheets, "[Assertion failed] - this argument is required; it must not be null");
         this.stylesheets = stylesheets;
     }
 

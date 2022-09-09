@@ -9,7 +9,7 @@ import java.util.List;
 public class ProductModel {
     public final String name;
     public final String productId;
-    public final List<ProductModel> accessories = new ArrayList<ProductModel>();
+    public final List<ProductModel> accessories = new ArrayList<>();
 
     public ProductModel(String name, String productId) {
         this.name = name;
@@ -18,5 +18,9 @@ public class ProductModel {
 
     public void addAccessory(ProductModel accessory) {
         accessories.add(accessory);
+    }
+
+    public void removeAccessory(final int accessoryId) {
+        accessories.remove(accessoryId);
     }
 }

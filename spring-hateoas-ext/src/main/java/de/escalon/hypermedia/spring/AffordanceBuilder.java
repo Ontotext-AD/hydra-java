@@ -14,10 +14,10 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.affordance.*;
-import org.springframework.hateoas.Identifiable;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.LinkBuilder;
-import org.springframework.hateoas.core.DummyInvocationUtils;
+import org.springframework.hateoas.LinkRelation;
+import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -47,11 +47,11 @@ public class AffordanceBuilder implements LinkBuilder {
     private static final AffordanceBuilderFactory FACTORY = new AffordanceBuilderFactory();
 
     private PartialUriTemplateComponents partialUriTemplateComponents;
-    private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
+    private List<ActionDescriptor> actionDescriptors = new ArrayList<>();
 
-    private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
-    private List<String> rels = new ArrayList<String>();
-    private List<String> reverseRels = new ArrayList<String>();
+    private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<>();
+    private List<String> rels = new ArrayList<>();
+    private List<String> reverseRels = new ArrayList<>();
     private TypedResource collectionHolder;
 
     /**
@@ -82,7 +82,7 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     /**
-     * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Method, Object...)
+     * @see org.springframework.hateoas.server.MethodLinkBuilderFactory#linkTo(Method, Object...)
      */
     public static AffordanceBuilder linkTo(Method method, Object... parameters) {
         return linkTo(method.getDeclaringClass(), method, parameters);
@@ -105,7 +105,7 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     /**
-     * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Class, Method, Object...)
+     * @see org.springframework.hateoas.server.MethodLinkBuilderFactory#linkTo(Class, Method, Object...)
      */
     public static AffordanceBuilder linkTo(Class<?> controller, Method method, Object... parameters) {
         return FACTORY.linkTo(controller, method, parameters);
@@ -114,7 +114,7 @@ public class AffordanceBuilder implements LinkBuilder {
     /**
      * Creates a {@link AffordanceBuilder} pointing to a controller method. Hand in a dummy method invocation result
      * you
-     * can create via {@link #methodOn(Class, Object...)} or {@link DummyInvocationUtils#methodOn(Class, Object...)}.
+     * can create via {@link #methodOn(Class, Object...)} or {@link OntoDummyInvocationUtils#methodOn(Class, Object...)}.
      * <pre>
      * &#64;RequestMapping("/customers")
      * class CustomerController {
@@ -125,7 +125,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * </pre>
      * The resulting {@link Link} instance will point to {@code /customers/2/addresses} and have a rel of {@code
      * addresses}. For more details on the method invocation constraints, see {@link
-     * DummyInvocationUtils#methodOn(Class, Object...)}.
+     * OntoDummyInvocationUtils#methodOn(Class, Object...)}.
      *
      * @param methodInvocation
      * @return
@@ -140,8 +140,8 @@ public class AffordanceBuilder implements LinkBuilder {
      */
     AffordanceBuilder() {
         this(new PartialUriTemplate(getBuilder().build()
-                        .toString()).expand(Collections.<String, Object>emptyMap()),
-                Collections.<ActionDescriptor>emptyList());
+                        .toString()).expand(Collections.emptyMap()),
+                Collections.emptyList());
     }
 
     /**
@@ -155,18 +155,16 @@ public class AffordanceBuilder implements LinkBuilder {
     public AffordanceBuilder(PartialUriTemplateComponents partialUriTemplateComponents, List<ActionDescriptor>
             actionDescriptors) {
 
-        Assert.notNull(partialUriTemplateComponents);
-        Assert.notNull(actionDescriptors);
+        Assert.notNull(partialUriTemplateComponents, "Partial Uri template components should not be null");
+        Assert.notNull(actionDescriptors, "Action descriptors should not be null");
 
         this.partialUriTemplateComponents = partialUriTemplateComponents;
 
-        for (ActionDescriptor actionDescriptor : actionDescriptors) {
-            this.actionDescriptors.add(actionDescriptor);
-        }
+        this.actionDescriptors.addAll(actionDescriptors);
     }
 
     public static <T> T methodOn(Class<T> clazz, Object... parameters) {
-        return DummyInvocationUtils.methodOn(clazz, parameters);
+        return OntoDummyInvocationUtils.methodOn(clazz, parameters);
     }
 
     /**
@@ -189,7 +187,7 @@ public class AffordanceBuilder implements LinkBuilder {
                 "no rels or reverse rels found, call rel() or rev() before building the affordance");
         final Affordance affordance;
         affordance = new Affordance(new PartialUriTemplate(this.toString()), actionDescriptors,
-                rels.toArray(new String[rels.size()]));
+                rels.toArray(new String[0]));
         for (Map.Entry<String, List<String>> linkParamEntry : linkParams.entrySet()) {
             final List<String> values = linkParamEntry.getValue();
             for (String value : values) {
@@ -266,7 +264,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * not belong to the product, but to an order. You can express that by saying:
      * <pre>
      * TypedResource order = new TypedResource("http://schema.org/Order"); // holds the ordered items
-     * Resource&lt;Product&gt; product = new Resource&lt;&gt;(); // has a loose relationship to ordered items
+     * EntityModel&lt;Product&gt; product = new EntityModel&lt;&gt;(); // has a loose relationship to ordered items
      * product.add(linkTo(methodOn(OrderController.class).postOrderedItem()
      *    .rel(order, "orderedItem")); // order has ordered items, not product has ordered items
      * </pre>
@@ -338,10 +336,6 @@ public class AffordanceBuilder implements LinkBuilder {
             return this;
         }
 
-        if (object instanceof Identifiable) {
-            return slash((Identifiable<?>) object);
-        }
-
         String urlPart = object.toString();
 
         // make sure one cannot delete the fragment
@@ -375,22 +369,13 @@ public class AffordanceBuilder implements LinkBuilder {
                 urlPartComponents.getFragmentIdentifier() :
                 affordanceComponents.getFragmentIdentifier();
 
-        List<String> variableNames = new ArrayList<String>();
+        List<String> variableNames = new ArrayList<>();
         variableNames.addAll(affordanceComponents.getVariableNames());
         variableNames.addAll(urlPartComponents.getVariableNames());
         final PartialUriTemplateComponents mergedUriComponents =
                 new PartialUriTemplateComponents(path, queryHead, queryTail, fragmentIdentifier, variableNames);
 
         return new AffordanceBuilder(mergedUriComponents, actionDescriptors);
-    }
-
-    @Override
-    public AffordanceBuilder slash(Identifiable<?> identifiable) {
-        if (identifiable == null) {
-            return this;
-        }
-
-        return slash(identifiable.getId());
     }
 
     @Override
@@ -414,8 +399,13 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     @Override
+    public Link withRel(final LinkRelation rel) {
+        return rel(rel.value()).build();
+    }
+
+    @Override
     public Affordance withSelfRel() {
-        return rel(Link.REL_SELF).build();
+        return rel(IanaLinkRelations.SELF_VALUE).build();
     }
 
     @Override
@@ -476,9 +466,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * @return builder
      */
     public AffordanceBuilder and(AffordanceBuilder affordanceBuilder) {
-        for (ActionDescriptor actionDescriptor : affordanceBuilder.actionDescriptors) {
-            this.actionDescriptors.add(actionDescriptor);
-        }
+        this.actionDescriptors.addAll(affordanceBuilder.actionDescriptors);
         return this;
     }
 }

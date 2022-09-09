@@ -19,10 +19,11 @@ import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.*;
@@ -32,7 +33,7 @@ import static org.junit.Assert.*;
 public class UberUtilsTest {
 
     private static final String URL_HOME = "http://www.example.com";
-    private static final Link LINK_HOME = new Link(URL_HOME, "home");
+    private static final Link LINK_HOME = Link.of(URL_HOME, "home");
     private static final String FOO_VALUE = "foo";
     private static final String BAR_VALUE = "bar";
     private static final String NESTED_FOO_VALUE = "nestedFooValue";
@@ -40,10 +41,10 @@ public class UberUtilsTest {
 
 
     @Test
-    public void linkGetToUberNode() throws Exception {
+    public void linkGetToUberNode() {
         UberNode linkNode = UberUtils.toUberLink("/foo", new SpringActionDescriptor("get", RequestMethod.GET.name()),
-                Link.REL_SELF);
-        assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
+                IanaLinkRelations.SELF_VALUE);
+        assertEquals(Collections.singletonList(IanaLinkRelations.SELF_VALUE), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
         assertNull(linkNode.getModel());
         assertNull(linkNode.getAction());
@@ -82,8 +83,8 @@ public class UberUtilsTest {
         actionDescriptor.setRequestBody(
                 new SpringActionInputParameter(new MethodParameter(this.getClass()
                         .getMethod("requestBody", FooRequestBody.class), 0), null));
-        UberNode linkNode = UberUtils.toUberLink("/foo", actionDescriptor, Link.REL_SELF);
-        assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
+        UberNode linkNode = UberUtils.toUberLink("/foo", actionDescriptor, IanaLinkRelations.SELF_VALUE);
+        assertEquals(Collections.singletonList(IanaLinkRelations.SELF_VALUE), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
         assertThat(linkNode.getModel(),
                 Matchers.containsString("foo={foo}"));
@@ -140,7 +141,7 @@ public class UberUtilsTest {
     }
 
 
-    class BeanResource extends ResourceSupport {
+    static class BeanResource extends RepresentationModel<BeanResource> {
 
 
         public String getFoo() {
@@ -154,7 +155,7 @@ public class UberUtilsTest {
 
     @Test
     public void resourceToUberNode() throws Exception {
-        Resource<Bean> beanResource = new Resource<Bean>(new Bean());
+        EntityModel<Bean> beanResource = EntityModel.of(new Bean());
         beanResource.add(LINK_HOME);
 
         UberNode node = new UberNode();
@@ -193,7 +194,7 @@ public class UberUtilsTest {
     @Test
     public void resourcesToUberNode() throws Exception {
         List<Bean> beans = Arrays.asList(new Bean(), new Bean("fooValue2", "barValue2"));
-        Resources<Bean> beanResources = new Resources<Bean>(beans);
+        CollectionModel<Bean> beanResources = CollectionModel.of(beans);
         beanResources.add(LINK_HOME);
 
         UberNode node = new UberNode();
@@ -222,11 +223,11 @@ public class UberUtilsTest {
     public void identifiableToUberNode() throws Exception {
         BeanResource bean = new BeanResource();
         String canonicalUrl = "http://www.example.com/bean/1";
-        bean.add(new Link(canonicalUrl, Link.REL_SELF));
+        bean.add(Link.of(canonicalUrl, IanaLinkRelations.SELF_VALUE));
         UberNode node = new UberNode();
         UberUtils.toUberData(node, bean);
         System.out.println(new ObjectMapper().writeValueAsString(node));
-        UberNode selfRel = node.getFirstByRel(Link.REL_SELF);
+        UberNode selfRel = node.getFirstByRel(IanaLinkRelations.SELF_VALUE);
         assertEquals(canonicalUrl, selfRel.getUrl());
     }
 
@@ -284,7 +285,7 @@ public class UberUtilsTest {
 
     @Test
     public void mapOfStringsToUberNode() throws Exception {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("foo", FOO_VALUE);
         map.put("bar", BAR_VALUE);
         UberNode node = new UberNode();
@@ -300,7 +301,7 @@ public class UberUtilsTest {
 
     @Test
     public void mapOfBeansToUberNode() throws Exception {
-        Map<String, Bean> map = new HashMap<String, Bean>();
+        Map<String, Bean> map = new HashMap<>();
         map.put("baz", new Bean());
         UberNode node = new UberNode();
         UberUtils.toUberData(node, map);

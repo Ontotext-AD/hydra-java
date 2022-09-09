@@ -15,6 +15,7 @@ package de.escalon.hypermedia.spring.uber;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 
 import java.util.Arrays;
@@ -29,8 +30,8 @@ public class AbstractUberNodeTest {
     private UberNode foo = new UberNode();
     private UberNode bar = new UberNode();
     private UberNode baz = new UberNode();
-    private Link linkPrevious = new Link(URL_PREVIOUS, Link.REL_PREVIOUS);
-    private Link linkNext = new Link(URL_NEXT, Link.REL_NEXT);
+    private Link linkPrevious = Link.of(URL_PREVIOUS, IanaLinkRelations.PREVIOUS);
+    private Link linkNext = Link.of(URL_NEXT, IanaLinkRelations.NEXT);
 
     class DummyUberNode extends AbstractUberNode {
 
@@ -48,7 +49,7 @@ public class AbstractUberNodeTest {
     }
 
     @Test
-    public void iteratesOverDataIgnoringLinksInBetween() throws Exception {
+    public void iteratesOverDataIgnoringLinksInBetween() {
 
         dummyUberNode.addData(foo);
         dummyUberNode.addLink(linkNext);
@@ -62,7 +63,7 @@ public class AbstractUberNodeTest {
     }
 
     @Test
-    public void iteratesOverDataIgnoringLinksAtStart() throws Exception {
+    public void iteratesOverDataIgnoringLinksAtStart() {
         dummyUberNode.addLink(linkNext);
         dummyUberNode.addData(foo);
         dummyUberNode.addData(bar);
@@ -75,7 +76,7 @@ public class AbstractUberNodeTest {
     }
 
     @Test
-    public void iteratesOverDataIgnoringLinksAtEnd() throws Exception {
+    public void iteratesOverDataIgnoringLinksAtEnd() {
 
         dummyUberNode.addData(foo);
         dummyUberNode.addData(bar);
@@ -89,7 +90,7 @@ public class AbstractUberNodeTest {
     }
 
     @Test
-    public void iteratesOverData() throws Exception {
+    public void iteratesOverData() {
         dummyUberNode.addData(foo);
         dummyUberNode.addData(bar);
 
@@ -101,7 +102,7 @@ public class AbstractUberNodeTest {
     }
 
     @Test
-    public void iteratesInOrder() throws Exception {
+    public void iteratesInOrder() {
         dummyUberNode.addData(bar);
         dummyUberNode.addData(foo);
         dummyUberNode.addData(baz);
@@ -114,15 +115,15 @@ public class AbstractUberNodeTest {
     }
 
     @Test
-    public void getsFirstNodeByRel() throws Exception {
+    public void getsFirstNodeByRel() {
         dummyUberNode.addData(bar);
         dummyUberNode.addLink(linkPrevious);
 
-        assertNotNull("rel previous not found", dummyUberNode.getFirstByRel(Link.REL_PREVIOUS));
+        assertNotNull("rel previous not found", dummyUberNode.getFirstByRel(IanaLinkRelations.PREVIOUS_VALUE));
     }
 
     @Test
-    public void getsFirstNodeByName() throws Exception {
+    public void getsFirstNodeByName() {
         dummyUberNode.addLink(linkPrevious);
         dummyUberNode.addData(foo);
         dummyUberNode.addData(bar);
@@ -133,11 +134,11 @@ public class AbstractUberNodeTest {
     }
 
     @Test
-    public void findsAddedLinks() throws Exception {
+    public void findsAddedLinks() {
         dummyUberNode.addLinks(Arrays.asList(linkNext, linkPrevious));
-        assertEquals(URL_NEXT, dummyUberNode.getFirstByRel(Link.REL_NEXT)
+        assertEquals(URL_NEXT, dummyUberNode.getFirstByRel(IanaLinkRelations.NEXT_VALUE)
                 .getUrl());
-        assertEquals(URL_PREVIOUS, dummyUberNode.getFirstByRel(Link.REL_PREVIOUS)
+        assertEquals(URL_PREVIOUS, dummyUberNode.getFirstByRel(IanaLinkRelations.PREVIOUS_VALUE)
                 .getUrl());
         assertNull(dummyUberNode.getFirstByRel("noSuchRel"));
     }

@@ -16,7 +16,7 @@ import java.util.List;
 public class OrderBackend {
     public static int orderCounter;
     public static int orderedItemCounter;
-    public List<OrderModel> orderModels = new ArrayList<OrderModel>();
+    public List<OrderModel> orderModels = new ArrayList<>();
 
     public OrderModel createOrder() {
         OrderModel orderModel = new OrderModel();
@@ -49,7 +49,7 @@ public class OrderBackend {
     }
 
     public List<OrderModel> getOrdersByStatus(OrderStatus orderStatus) {
-        List<OrderModel> ret = new ArrayList<OrderModel>();
+        List<OrderModel> ret = new ArrayList<>();
         for (OrderModel orderModel : orderModels) {
             if (orderModel.getOrderStatus() == orderStatus) {
                 ret.add(orderModel);
