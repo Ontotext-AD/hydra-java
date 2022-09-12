@@ -18,7 +18,8 @@
         <snapshots.repo>http://maven.ontotext.com/content/repositories/snapshots</snapshots.repo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>5.3.22</spring.version>
-        <jackson.version>2.9.8</jackson.version>
+        <jackson.version>2.13.4</jackson.version>
+        <maven.compiler.plugin>3.10.1</maven.compiler.plugin>
     </properties>
 
     <inceptionYear>2014</inceptionYear>
@@ -219,6 +220,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin}</version>
                     <configuration>
                         <source>1.8</source>
                         <target>1.8</target>
