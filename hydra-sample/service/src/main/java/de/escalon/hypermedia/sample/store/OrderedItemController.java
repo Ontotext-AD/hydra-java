@@ -15,37 +15,33 @@ import java.util.List;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 
-/**
- * Created by Dietrich on 02.11.2015.
- */
+/** Created by Dietrich on 02.11.2015. */
 @RequestMapping("/orders/{orderId}/items")
 @Controller
 public class OrderedItemController {
 
-    @Autowired
-    private OrderBackend orderBackend;
+  @Autowired private OrderBackend orderBackend;
 
-    @Autowired
-    private ProductAssembler productAssembler;
+  @Autowired private ProductAssembler productAssembler;
 
-    @RequestMapping("/{orderedItemId}")
-    public ResponseEntity<Product> getOrderedItem(@PathVariable int orderId, @PathVariable int orderedItemId) {
-        OrderModel order = orderBackend.getOrder(orderId);
-        List<OrderedItemModel> orderedItems = order.getOrderedItems();
-        OrderedItemModel found = null;
-        for (OrderedItemModel orderedItem : orderedItems) {
-            if (orderedItem.orderedItemId == orderedItemId) {
-                found = orderedItem;
-                break;
-            }
-        }
-        Product product = null;
-        if (found != null) {
-            product = productAssembler.instantiateResource(found.orderedItem);
-            product.add(linkTo(methodOn(this.getClass())
-                    .getOrderedItem(orderId, orderedItemId))
-                    .withSelfRel());
-        }
-        return new ResponseEntity<Product>(product, HttpStatus.OK);
+  @RequestMapping("/{orderedItemId}")
+  public ResponseEntity<Product> getOrderedItem(
+      @PathVariable int orderId, @PathVariable int orderedItemId) {
+    OrderModel order = orderBackend.getOrder(orderId);
+    List<OrderedItemModel> orderedItems = order.getOrderedItems();
+    OrderedItemModel found = null;
+    for (OrderedItemModel orderedItem : orderedItems) {
+      if (orderedItem.orderedItemId == orderedItemId) {
+        found = orderedItem;
+        break;
+      }
     }
+    Product product = null;
+    if (found != null) {
+      product = productAssembler.instantiateModel(found.orderedItem);
+      product.add(
+          linkTo(methodOn(this.getClass()).getOrderedItem(orderId, orderedItemId)).withSelfRel());
+    }
+    return new ResponseEntity<>(product, HttpStatus.OK);
+  }
 }

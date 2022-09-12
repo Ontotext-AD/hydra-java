@@ -17,7 +17,7 @@ import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.sample.beans.event.Review;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,15 +38,15 @@ public class ReviewController {
     @Autowired
     EventBackend eventBackend;
 
-    @RequestMapping(value = "/events/{eventId}", method = RequestMethod.GET)
+    @GetMapping(value = "/events/{eventId}")
     @ResponseBody
-    public ResponseEntity<Resources<Review>> getReviews(@PathVariable int eventId) {
+    public ResponseEntity<CollectionModel<Review>> getReviews(@PathVariable int eventId) {
         List<Review> reviews = eventBackend.getReviews()
                 .get(eventId);
 
-        ResponseEntity<Resources<Review>> ret;
+        ResponseEntity<CollectionModel<Review>> ret;
         if (reviews != null) {
-            final Resources<Review> reviewResources = new Resources<Review>(reviews);
+            final CollectionModel<Review> reviewResources = CollectionModel.of(reviews);
 
             reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
                     .getEvent(eventId)) // passing null requires that method takes Integer, not int
@@ -55,22 +55,22 @@ public class ReviewController {
                     .addReview
                             (eventId, null))
                     .withSelfRel());
-            ret = new ResponseEntity<Resources<Review>>(reviewResources, HttpStatus.OK);
+            ret = new ResponseEntity<>(reviewResources, HttpStatus.OK);
         } else {
-            ret = new ResponseEntity<Resources<Review>>(HttpStatus.NOT_FOUND);
+            ret = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return ret;
     }
 
     @Action("ReviewAction")
-    @RequestMapping(value = "/events/{eventId}", method = RequestMethod.POST)
+    @PostMapping(value = "/events/{eventId}")
     public
     @ResponseBody
     ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
-        Assert.notNull(review);
-        Assert.notNull(review.getReviewRating());
+        Assert.notNull(review, () -> "The review argument is required; it must not be null");
+        Assert.notNull(review.getReviewRating(), () -> "The review rating argument is required; it must not be null");
         Assert.notNull(review.getReviewRating()
-                .getRatingValue());
+                .getRatingValue(), () -> "The review rating value argument is required; it must not be null");
         ResponseEntity<Void> responseEntity;
         try {
             eventBackend.addReview(eventId, review.getReviewBody(), review.getReviewRating());
@@ -78,12 +78,10 @@ public class ReviewController {
             headers.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
                     .getReviews(eventId))
                     .toUri());
-            responseEntity = new ResponseEntity<Void>(headers, HttpStatus.CREATED);
+            responseEntity = new ResponseEntity<>(headers, HttpStatus.CREATED);
         } catch (NoSuchElementException ex) {
-            responseEntity = new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+            responseEntity = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return responseEntity;
     }
-
-
 }

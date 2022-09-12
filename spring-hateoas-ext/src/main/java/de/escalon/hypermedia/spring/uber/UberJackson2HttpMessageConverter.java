@@ -19,13 +19,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import de.escalon.hypermedia.spring.HypermediaTypes;
-import org.springframework.hateoas.ResourceSupport;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -35,99 +37,95 @@ import java.util.Map;
 
 public class UberJackson2HttpMessageConverter extends AbstractHttpMessageConverter<Object> {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private Boolean prettyPrint;
+  private ObjectMapper objectMapper = new ObjectMapper();
+  private Boolean prettyPrint;
 
-    public UberJackson2HttpMessageConverter() {
-        super(HypermediaTypes.UBER_JSON);
-        objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, true);
+  public UberJackson2HttpMessageConverter() {
+    super(HypermediaTypes.UBER_JSON);
+    objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, true);
+  }
+
+  @Override
+  protected boolean supports(@NotNull Class<?> clazz) {
+    final boolean ret;
+    ret =
+        RepresentationModel.class.isAssignableFrom(clazz)
+            || Collection.class.isAssignableFrom(clazz)
+            || Map.class.isAssignableFrom(clazz);
+    return ret;
+  }
+
+  @NonNull
+  @Override
+  protected Object readInternal(
+          @NotNull Class<?> clazz, @NotNull HttpInputMessage inputMessage)
+      throws HttpMessageNotReadableException {
+    // TODO read uber data
+    return null;
+  }
+
+  @NonNull
+  @Override
+  protected void writeInternal(Object t, HttpOutputMessage outputMessage)
+      throws IOException, HttpMessageNotWritableException {
+
+    UberMessageModel uberModel = new UberMessageModel(t);
+    JsonEncoding encoding = getJsonEncoding(outputMessage.getHeaders().getContentType());
+    JsonGenerator jsonGenerator =
+        this.objectMapper.getFactory().createGenerator(outputMessage.getBody(), encoding);
+
+    // A workaround for JsonGenerators not applying serialization features
+    // https://github.com/FasterXML/jackson-databind/issues/12
+    if (this.objectMapper.isEnabled(SerializationFeature.INDENT_OUTPUT)) {
+      jsonGenerator.useDefaultPrettyPrinter();
     }
 
-    @Override
-    protected boolean supports(Class<?> clazz) {
-        final boolean ret;
-        if (ResourceSupport.class.isAssignableFrom(clazz)
-                || Collection.class.isAssignableFrom(clazz) || Map.class.isAssignableFrom(clazz)) {
-            ret = true;
-        } else {
-            ret = false;
+    try {
+      this.objectMapper.writeValue(jsonGenerator, uberModel);
+    } catch (JsonProcessingException ex) {
+      throw new HttpMessageNotWritableException("Could not write JSON: " + ex.getMessage(), ex);
+    }
+  }
+
+  /**
+   * Determine the JSON encoding to use for the given content type.
+   *
+   * @param contentType the media type as requested by the caller
+   * @return the JSON encoding to use (never {@code null})
+   */
+  protected JsonEncoding getJsonEncoding(MediaType contentType) {
+    if (contentType != null && contentType.getCharset() != null) {
+      Charset charset = contentType.getCharset();
+      for (JsonEncoding encoding : JsonEncoding.values()) {
+        if (charset.name().equals(encoding.getJavaName())) {
+          return encoding;
         }
-        return ret;
+      }
     }
+    return JsonEncoding.UTF8;
+  }
 
-    @Override
-    protected Object readInternal(Class<? extends Object> clazz, HttpInputMessage inputMessage) throws IOException,
-            HttpMessageNotReadableException {
-        // TODO read uber data
-        return null;
+  /**
+   * Set the {@code ObjectMapper} for this view. If not set, a default {@link
+   * com.fasterxml.jackson.databind .ObjectMapper#ObjectMapper() ObjectMapper} is used. Setting a
+   * custom-configured {@code ObjectMapper} is one way to take further control of the JSON
+   * serialization process. For example, an extended {@link
+   * com.fasterxml.jackson.databind.ser.SerializerFactory} can be configured that provides custom
+   * serializers for specific types. The other option for refining the serialization process is to
+   * use Jackson's provided annotations on the types to be serialized, in which case a
+   * custom-configured ObjectMapper is unnecessary.
+   *
+   * @param objectMapper used for json mapping
+   */
+  public void setObjectMapper(ObjectMapper objectMapper) {
+    Assert.notNull(objectMapper, "ObjectMapper must not be null");
+    this.objectMapper = objectMapper;
+    configurePrettyPrint();
+  }
+
+  private void configurePrettyPrint() {
+    if (this.prettyPrint != null) {
+      this.objectMapper.configure(SerializationFeature.INDENT_OUTPUT, this.prettyPrint);
     }
-
-    @Override
-    protected void writeInternal(Object t, HttpOutputMessage outputMessage) throws IOException,
-            HttpMessageNotWritableException {
-
-        UberMessageModel uberModel = new UberMessageModel(t);
-        JsonEncoding encoding = getJsonEncoding(outputMessage.getHeaders()
-                .getContentType());
-        JsonGenerator jsonGenerator = this.objectMapper.getFactory()
-                .createGenerator(outputMessage.getBody(), encoding);
-
-        // A workaround for JsonGenerators not applying serialization features
-        // https://github.com/FasterXML/jackson-databind/issues/12
-        if (this.objectMapper.isEnabled(SerializationFeature.INDENT_OUTPUT)) {
-            jsonGenerator.useDefaultPrettyPrinter();
-        }
-
-        try {
-            this.objectMapper.writeValue(jsonGenerator, uberModel);
-        } catch (JsonProcessingException ex) {
-            throw new HttpMessageNotWritableException("Could not write JSON: " + ex.getMessage(), ex);
-        }
-    }
-
-    /**
-     * Determine the JSON encoding to use for the given content type.
-     *
-     * @param contentType
-     *         the media type as requested by the caller
-     * @return the JSON encoding to use (never {@code null})
-     */
-    protected JsonEncoding getJsonEncoding(MediaType contentType) {
-        if (contentType != null && contentType.getCharSet() != null) {
-            Charset charset = contentType.getCharSet();
-            for (JsonEncoding encoding : JsonEncoding.values()) {
-                if (charset.name()
-                        .equals(encoding.getJavaName())) {
-                    return encoding;
-                }
-            }
-        }
-        return JsonEncoding.UTF8;
-    }
-
-    /**
-     * Set the {@code ObjectMapper} for this view. If not set, a default {@link com.fasterxml.jackson.databind
-     * .ObjectMapper#ObjectMapper()
-     * ObjectMapper} is used. Setting a custom-configured {@code ObjectMapper} is one way to take further control of
-     * the
-     * JSON serialization process. For example, an extended
-     * {@link com.fasterxml.jackson.databind.ser.SerializerFactory}
-     * can be configured that provides custom serializers for specific types. The other option for refining the
-     * serialization process is to use Jackson's provided annotations on the types to be serialized, in which case a
-     * custom-configured ObjectMapper is unnecessary.
-     *
-     * @param objectMapper
-     *         used for json mapping
-     */
-    public void setObjectMapper(ObjectMapper objectMapper) {
-        Assert.notNull(objectMapper, "ObjectMapper must not be null");
-        this.objectMapper = objectMapper;
-        configurePrettyPrint();
-    }
-
-    private void configurePrettyPrint() {
-        if (this.prettyPrint != null) {
-            this.objectMapper.configure(SerializationFeature.INDENT_OUTPUT, this.prettyPrint);
-        }
-    }
+  }
 }

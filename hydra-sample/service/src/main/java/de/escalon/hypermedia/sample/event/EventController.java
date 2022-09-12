@@ -8,7 +8,7 @@ import de.escalon.hypermedia.sample.model.event.EventModel;
 import de.escalon.hypermedia.sample.model.event.EventStatusType;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,31 +33,31 @@ public class EventController {
 
 //    @RequestMapping(method = RequestMethod.GET)
 //    @ResponseBody
-//    public ResponseEntity<Resources<Event>> getEvents() {
+//    public ResponseEntity<CollectionModel<Event>> getEvents() {
 //        List<Event> events = assembler.toResources(eventBackend.getEvents());
 //        for (Event event : events) {
 //            addAffordances(event);
 //        }
-//        Resources<Event> eventResources = new Resources<Event>(events);
+//        CollectionModel<Event> eventResources = new CollectionModel<Event>(events);
 //
 //        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class).addEvent(null))
 //                .withSelfRel());
 //
-//        return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
+//        return new ResponseEntity<CollectionModel<Event>>(eventResources, HttpStatus.OK);
 //    }
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<Resources<Event>> findEvents(@RequestParam(required = false) String name) {
-        List<Event> events = assembler.toResources(eventBackend.getEvents());
-        List<Event> matches = new ArrayList<Event>();
+    public ResponseEntity<CollectionModel<Event>> findEvents(@RequestParam(required = false) String name) {
+        CollectionModel<Event> events = assembler.toCollectionModel(eventBackend.getEvents());
+        List<Event> matches = new ArrayList<>();
         for (Event event : events) {
             if (name == null || event.workPerformed.getContent().name.equals(name)) {
                 addAffordances(event);
                 matches.add(event);
             }
         }
-        Resources<Event> eventResources = new Resources<Event>(matches);
+        CollectionModel<Event> eventResources = CollectionModel.of(matches);
 
         eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
                 .addEvent(new Event(null, new CreativeWork(null), null, EventStatusType.EVENT_SCHEDULED)))
@@ -67,17 +67,17 @@ public class EventController {
                 .findEvents(null))
                 .withRel("hydra:search"));
 
-        return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
+        return new ResponseEntity<>(eventResources, HttpStatus.OK);
     }
 
 
     @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
     public ResponseEntity<Event> getEvent(@PathVariable Integer eventId) {
-        Event event = assembler.toResource(eventBackend.getEvent(eventId));
+        Event event = assembler.toModel(eventBackend.getEvent(eventId));
 
         addAffordances(event);
 
-        return new ResponseEntity<Event>(event, HttpStatus.OK);
+        return new ResponseEntity<>(event, HttpStatus.OK);
     }
 
     private void addAffordances(Event event) {
@@ -96,13 +96,13 @@ public class EventController {
     @RequestMapping(value = "/{eventId}", method = RequestMethod.PUT)
     public ResponseEntity<Void> updateEvent(@PathVariable int eventId, @RequestBody Event event) {
         eventBackend.updateEvent(eventId, event.getEventStatus());
-        return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value = "/{eventId}", method = RequestMethod.DELETE)
     public ResponseEntity<Void> deleteEvent(@PathVariable int eventId) {
         eventBackend.deleteEvent(eventId);
-        return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 
@@ -115,7 +115,7 @@ public class EventController {
         httpHeaders.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
                 .getEvent(eventId))
                 .toUri());
-        return new ResponseEntity<Void>(httpHeaders, HttpStatus.CREATED);
+        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
     }
 
 

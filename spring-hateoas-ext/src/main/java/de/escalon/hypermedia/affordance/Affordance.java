@@ -18,8 +18,9 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import de.escalon.hypermedia.action.Cardinality;
-import org.springframework.aop.DynamicIntroductionAdvice;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.util.Assert;
@@ -33,14 +34,14 @@ import static de.escalon.hypermedia.affordance.Affordance.LinkParam.*;
 
 /**
  * Represents an http affordance for purposes of a ReST service as described by <a
- * href="http://tools.ietf.org/html/rfc5988">Web Linking rfc-5988</a>. Additionally includes {@link ActionDescriptor}s
+ * href="http://tools.ietf.org/html/rfc5988">Web Linking rfc-5988</a>. Additionally, includes {@link ActionDescriptor}s
  * for http methods and expected request bodies. <p>Also supports templated affordances, in which case it is represented
  * as a <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a></p>
  *
  * <p>This class can be created manually or via one of the {@link de.escalon.hypermedia.spring.AffordanceBuilder#linkTo}
  * methods. In the latter case the affordance should be created with pre-expanded variables (using {@link
  * PartialUriTemplate#expand} on the given uri template). In the former case one may use {@link #expandPartially} to
- * expand the Affordance variables as far as possible, while keeping unsatisified variables.</p>
+ * expand the Affordance variables as far as possible, while keeping unsatisfied variables.</p>
  *
  * <p>Created by dschulten
  * on 07.09.2014.</p>
@@ -72,8 +73,8 @@ public class Affordance extends Link {
     }
 
     private boolean selfRel = false;
-    private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
-    private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
+    private List<ActionDescriptor> actionDescriptors = new ArrayList<>();
+    private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<>();
     private PartialUriTemplate partialUriTemplate;
     private Cardinality cardinality = Cardinality.SINGLE;
     private TypedResource collectionHolder;
@@ -85,7 +86,7 @@ public class Affordance extends Link {
      * @param rels        describing the link relation type
      */
     public Affordance(String uriTemplate, String... rels) {
-        this(new PartialUriTemplate(uriTemplate), new ArrayList<ActionDescriptor>(), rels);
+        this(new PartialUriTemplate(uriTemplate), new ArrayList<>(), rels);
     }
 
     /**
@@ -110,14 +111,14 @@ public class Affordance extends Link {
      */
     public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {
         // Since AffordanceBuilder creates variables for undefined arguments,
-        // we would get a link-template where ControllerLinkBuilder only sees a link.
-        // For compatibility we strip variables deemed to be not required by the actionDescriptors before passing on
+        // we would get a link-template where WebMvcLinkBuilder only sees a link.
+        // For, compatibility we strip variables deemed to be not required by the actionDescriptors before passing on
         // the template to the underlying Link. That way the href of an Affordance stays compatible with a Link that
-        // has been created with ControllerLinkBuilder. Only serializers that make use of Affordance will see the
+        // has been created with WebMvcLinkBuilder. Only serializers that make use of Affordance will see the
         // optional variables, too.
         // They can access the base uri, query etc. via getUriTemplateComponents.
         super(uriTemplate.stripOptionalVariables(actionDescriptors)
-                .toString());
+                .toString(), IanaLinkRelations.SELF);
         this.partialUriTemplate = uriTemplate;
 
         Assert.noNullElements(rels, "null rels are not allowed");
@@ -152,7 +153,7 @@ public class Affordance extends Link {
      * @param rel IANA-registered type or extension relation type.
      */
     public void addRel(String rel) {
-        Assert.hasLength(rel);
+        Assert.hasLength(rel, "[Assertion failed] - this String argument must have length; it must not be null or empty");
         linkParams.add(REL.paramName, rel);
     }
 
@@ -180,7 +181,7 @@ public class Affordance extends Link {
      * @param hreflang to add
      */
     public void addHreflang(String hreflang) {
-        Assert.hasLength(hreflang);
+        Assert.hasLength(hreflang, "[Assertion failed] - this String argument must have length; it must not be null or empty");
         linkParams.add(HREFLANG.paramName, hreflang);
     }
 
@@ -224,7 +225,7 @@ public class Affordance extends Link {
      * @see <a href="http://www.cowtowncoder.com/blog/archives/2011/07/entry_458.html">Jackson tips: using @JsonAnyGetter/@JsonAnySetter to create "dyna beans"</a>
      */
     public class DynaBean {
-        protected Map<String, Object> dynaProperties = new HashMap<String, Object>();
+        protected Map<String, Object> dynaProperties = new HashMap<>();
 
         public Object get(String name) {
             return dynaProperties.get(name);
@@ -254,8 +255,7 @@ public class Affordance extends Link {
     @JsonUnwrapped
     public DynaBean getLinkExtensions() {
         DynaBean dynaBean = new DynaBean();
-        LinkedHashMap<String, String> linkExtensions = new LinkedHashMap<String, String>();
-        linkExtensions.putAll(linkParams.toSingleValueMap());
+        LinkedHashMap<String, String> linkExtensions = new LinkedHashMap<>(linkParams.toSingleValueMap());
         for (LinkParam linkParam : LinkParam.values()) {
             linkExtensions.remove(linkParam.paramName);
         }
@@ -320,7 +320,7 @@ public class Affordance extends Link {
      * @param rev to add
      */
     public void addRev(String rev) {
-        Assert.hasLength(rev);
+        Assert.hasLength(rev, "[Assertion failed] - this String argument must have length; it must not be null or empty");
         linkParams.add(REV.paramName, rev);
     }
 
@@ -347,9 +347,9 @@ public class Affordance extends Link {
      * @param values    one or more values to add
      */
     public void addLinkParam(String paramName, String... values) {
-        Assert.notEmpty(values);
+        Assert.notEmpty(values, "[Assertion failed] - this array must not be empty: it must contain at least 1 element");
         for (String value : values) {
-            Assert.hasLength(value);
+            Assert.hasLength(value, "[Assertion failed] - this String argument must have length; it must not be null or empty");
             linkParams.add(paramName, value);
         }
     }
@@ -441,8 +441,8 @@ public class Affordance extends Link {
     @Override
     public Affordance withSelfRel() {
         if (!linkParams.get(REL.paramName)
-                .contains(Link.REL_SELF)) {
-            linkParams.add(REL.paramName, Link.REL_SELF);
+                .contains(IanaLinkRelations.SELF_VALUE)) {
+            linkParams.add(REL.paramName, IanaLinkRelations.SELF_VALUE);
         }
         return new Affordance(this.getHref(), linkParams, actionDescriptors);
     }
@@ -456,22 +456,11 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Object... arguments) {
-        UriTemplate template = new UriTemplate(partialUriTemplate.asComponents()
+        UriTemplate template = UriTemplate.of(partialUriTemplate.asComponents()
                 .toString());
         String expanded = template.expand(arguments)
                 .toASCIIString();
         return new Affordance(expanded, linkParams, actionDescriptors);
-    }
-
-    /**
-     * Gets href of this link. Non-mandatory template variables will be removed for compatibility with the underlying {@link Link} class.
-     * To access the full uri template including optional variables, use {@link #getUriTemplateComponents()}
-     *
-     * @return
-     */
-    @Override
-    public String getHref() {
-        return super.getHref();
     }
 
     /**
@@ -493,7 +482,7 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
-        UriTemplate template = new UriTemplate(partialUriTemplate.asComponents()
+        UriTemplate template = UriTemplate.of(partialUriTemplate.asComponents()
                 .toString());
         String expanded = template.expand(arguments)
                 .toASCIIString();
@@ -522,7 +511,7 @@ public class Affordance extends Link {
      * @return partially expanded affordance
      */
     public Affordance expandPartially(Map<String, ? extends Object> arguments) {
-        return new Affordance(partialUriTemplate.expand((Map<String, Object>) arguments)
+        return new Affordance(partialUriTemplate.expand(arguments)
                 .toString(), linkParams, actionDescriptors);
     }
 
@@ -535,7 +524,7 @@ public class Affordance extends Link {
     @JsonIgnore
     public List<String> getRels() {
         final List<String> rels = linkParams.get(REL.paramName);
-        return rels == null ? Collections.<String>emptyList() : Collections.unmodifiableList(rels);
+        return rels == null ? Collections.emptyList() : Collections.unmodifiableList(rels);
     }
 
     /**
@@ -544,8 +533,10 @@ public class Affordance extends Link {
      * @return first defined rel or null
      */
     @Override
-    public String getRel() {
-        return linkParams.getFirst(REL.paramName);
+    public LinkRelation getRel() {
+        if (linkParams.getFirst(REL.paramName) != null)
+            return LinkRelation.of(linkParams.getFirst(REL.paramName));
+        else return null;
     }
 
     /**
@@ -556,7 +547,7 @@ public class Affordance extends Link {
     @JsonIgnore
     public List<String> getRevs() {
         final List<String> revs = linkParams.get(REV.paramName);
-        return revs == null ? Collections.<String>emptyList() : Collections.unmodifiableList(revs);
+        return revs == null ? Collections.emptyList() : Collections.unmodifiableList(revs);
     }
 
     /**

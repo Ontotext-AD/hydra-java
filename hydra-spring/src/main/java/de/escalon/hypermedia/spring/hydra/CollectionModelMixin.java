@@ -13,24 +13,39 @@
 
 package de.escalon.hypermedia.spring.hydra;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.ResourceSupport;
-
-import java.util.List;
+import de.escalon.hypermedia.hydra.mapping.ContextProvider;
+import de.escalon.hypermedia.hydra.mapping.Expose;
+import de.escalon.hypermedia.hydra.mapping.Term;
+import java.util.Collection;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.Links;
 
 /**
- * Mixin for json-ld serialization of ResourceSupport. Created by dschulten on 14.09.2014.
+ * Mixin for json-ld serialization of CollectionModel. Created by dschulten on 14.09.2014.
  */
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude
+@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")
+@Expose("hydra:Collection")
+public abstract class CollectionModelMixin<T> extends CollectionModel<T> {
 
-public class ResourceSupportMixin extends ResourceSupport {
+    @NotNull
+    @Override
+    @JsonProperty("hydra:member")
+    @ContextProvider
+    public Collection<T> getContent() {
+        return super.getContent();
+    }
+
+    @NotNull
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
-    public List<Link> getLinks() {
+    public Links getLinks() {
         return super.getLinks();
     }
-
 }

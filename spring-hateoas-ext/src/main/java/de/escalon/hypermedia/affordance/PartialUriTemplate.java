@@ -36,11 +36,11 @@ public class PartialUriTemplate {
 
     private static final Pattern VARIABLE_REGEX = Pattern.compile("\\{([\\?\\&#/]?)([\\w\\,\\.]+)(:??.*?)\\}");
 
-    private final List<String> urlComponents = new ArrayList<String>();
+    private final List<String> urlComponents = new ArrayList<>();
 
-    private final List<List<Integer>> variableIndices = new ArrayList<List<Integer>>();
-    private List<TemplateVariable> variables = new ArrayList<TemplateVariable>();
-    private List<String> variableNames = new ArrayList<String>();
+    private final List<List<Integer>> variableIndices = new ArrayList<>();
+    private List<TemplateVariable> variables = new ArrayList<>();
+    private List<String> variableNames = new ArrayList<>();
 
     /**
      * Creates a new {@link PartialUriTemplate} using the given template string.
@@ -74,7 +74,7 @@ public class PartialUriTemplate {
                         } else {
                             urlComponents.add("?" + token);
                         }
-                        variableIndices.add(Collections.<Integer>emptyList());
+                        variableIndices.add(Collections.emptyList());
                     }
                 }
             }
@@ -90,7 +90,7 @@ public class PartialUriTemplate {
             // group(2) are the variable names
             String[] names = matcher.group(2)
                     .split(",");
-            List<Integer> variablesInPart = new ArrayList<Integer>();
+            List<Integer> variablesInPart = new ArrayList<>();
             for (String name : names) {
                 TemplateVariable variable = new TemplateVariable(name, type);
                 variablesInPart.add(variables.size());
@@ -130,7 +130,7 @@ public class PartialUriTemplate {
      */
     public PartialUriTemplateComponents expand(Object... parameters) {
         List<String> variableNames = getVariableNames();
-        Map<String, Object> parameterMap = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameterMap = new LinkedHashMap<>();
 
         int i = 0;
         for (String variableName : variableNames) {
@@ -140,7 +140,7 @@ public class PartialUriTemplate {
                 break;
             }
         }
-        return getUriTemplateComponents(parameterMap, Collections.<String>emptyList());
+        return getUriTemplateComponents(parameterMap, Collections.emptyList());
     }
 
     /**
@@ -151,7 +151,7 @@ public class PartialUriTemplate {
      * @return expanded template
      */
     public PartialUriTemplateComponents expand(Map<String, ?> parameters) {
-        return getUriTemplateComponents(parameters, Collections.<String>emptyList());
+        return getUriTemplateComponents(parameters, Collections.emptyList());
     }
 
     /**
@@ -199,18 +199,18 @@ public class PartialUriTemplate {
                                 }
                                 break;
                             case FRAGMENT:
-                                fragmentIdentifier.append(variable.toString());
+                                fragmentIdentifier.append(variable);
                                 break;
-                            case PATH_VARIABLE:
+                            case SIMPLE:
                                 if (queryHead.length() != 0) {
                                     // level 1 variable in query
-                                    queryHead.append(variable.toString());
+                                    queryHead.append(variable);
                                 } else {
-                                    baseUrl.append(variable.toString());
+                                    baseUrl.append(variable);
                                 }
                                 break;
-                            case SEGMENT:
-                                baseUrl.append(variable.toString());
+                            case PATH_SEGMENT:
+                                baseUrl.append(variable);
                         }
                     } else {
                         switch (variable.getType()) {
@@ -225,10 +225,10 @@ public class PartialUriTemplate {
                                         .append('=')
                                         .append(urlEncode(value.toString()));
                                 break;
-                            case SEGMENT:
+                            case PATH_SEGMENT:
                                 baseUrl.append('/');
                                 // fall through
-                            case PATH_VARIABLE:
+                            case SIMPLE:
                                 if (queryHead.length() != 0) {
                                     // level 1 variable in query
                                     queryHead.append(urlEncode(value.toString()));
@@ -267,11 +267,11 @@ public class PartialUriTemplate {
      * @return partial uri template components without optional variables, if actionDescriptors was not empty
      */
     public PartialUriTemplateComponents stripOptionalVariables(List<ActionDescriptor> actionDescriptors) {
-        return getUriTemplateComponents(Collections.<String, Object>emptyMap(), getRequiredArgNames(actionDescriptors));
+        return getUriTemplateComponents(Collections.emptyMap(), getRequiredArgNames(actionDescriptors));
     }
 
     private List<String> getRequiredArgNames(List<ActionDescriptor> actionDescriptors) {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
             Map<String, ActionInputParameter> required = actionDescriptor.getRequiredParameters();
             for (ActionInputParameter actionInputParameter : required.values()) {

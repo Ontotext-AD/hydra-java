@@ -14,8 +14,10 @@
     </description>
 
     <properties>
+        <internal.repo>http://maven.ontotext.com/content/repositories/internal</internal.repo>
+        <snapshots.repo>http://maven.ontotext.com/content/repositories/snapshots</snapshots.repo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.version>4.3.12.RELEASE</spring.version>
+        <spring.version>5.3.22</spring.version>
         <jackson.version>2.9.8</jackson.version>
     </properties>
 
@@ -61,9 +63,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/dschulten/hydra-java</url>
-        <connection>scm:git:https://github.com/dschulten/hydra-java.git</connection>
-        <developerConnection>scm:git:https://github.com/dschulten/hydra-java.git</developerConnection>
+        <connection>scm:git:git@github.com:Ontotext-AD/hydra-java.git</connection>
+        <developerConnection>scm:git:git@github.com:Ontotext-AD/hydra-java.git</developerConnection>
+        <url>https://github.com/Ontotext-AD/hydra-java</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -95,7 +97,7 @@
             <dependency>
                 <groupId>org.springframework.hateoas</groupId>
                 <artifactId>spring-hateoas</artifactId>
-                <version>0.24.0.RELEASE</version>
+                <version>1.5.1</version>
             </dependency>
             <dependency>
                 <groupId>de.escalon.hypermedia</groupId>
@@ -115,7 +117,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.1</version>
+                <version>3.12.0</version>
             </dependency>
             <!-- test dependencies -->
             <dependency>
@@ -139,13 +141,13 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
-                <version>1.7.7</version>
+                <version>2.0.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>1.1.2</version>
+                <version>1.4.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -157,7 +159,7 @@
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path-assert</artifactId>
-                <version>2.4.0</version>
+                <version>2.7.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -203,7 +205,7 @@
             <dependency>
                 <groupId>org.springframework.plugin</groupId>
                 <artifactId>spring-plugin-core</artifactId>
-                <version>1.2.0.RELEASE</version>
+                <version>2.0.0.RELEASE</version>
                 <optional>false</optional>
             </dependency>
 
@@ -218,8 +220,8 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
+                        <source>1.8</source>
+                        <target>1.8</target>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -239,7 +241,10 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.9.1</version>
+                    <version>3.4.1</version>
+                    <configuration>
+                        <source>8</source>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>attach-javadocs</id>
@@ -253,7 +258,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.5</version>
+                    <version>3.0.1</version>
                     <executions>
                         <execution>
                             <id>sign-artifacts</id>
@@ -268,39 +273,15 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>3.0.0-M6</version>
                     <configuration>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <useReleaseProfile>false</useReleaseProfile>
-                        <releaseProfiles>release</releaseProfiles>
-                        <goals>deploy</goals>
-                        <providerImplementations>
-                            <git>jgit</git>
-                        </providerImplementations>
                     </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.maven.scm</groupId>
-                            <artifactId>maven-scm-provider-jgit</artifactId>
-                            <version>1.9.2</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
 
             </plugins>
         </pluginManagement>
         <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.3</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -313,9 +294,15 @@
     </build>
 
     <distributionManagement>
+        <repository>
+            <id>internal</id>
+            <name>Platform Releases repository</name>
+            <url>${internal.repo}</url>
+        </repository>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>snapshots</id>
+            <name>Platform Snapshots repository</name>
+            <url>${snapshots.repo}</url>
         </snapshotRepository>
     </distributionManagement>
 

@@ -15,6 +15,7 @@ import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -186,7 +187,7 @@ public class XhtmlWriter extends Writer {
     }
 
     public void setStylesheets(List<String> stylesheets) {
-        Assert.notNull(stylesheets);
+        Assert.notNull(stylesheets, "[Assertion failed] - this argument is required; it must not be null");
         this.stylesheets = stylesheets;
     }
 
@@ -196,7 +197,7 @@ public class XhtmlWriter extends Writer {
 
     public static class OptionalAttributes {
 
-        private Map<String, String> attributes = new LinkedHashMap<String, String>();
+        private Map<String, String> attributes = new LinkedHashMap<>();
 
         @Override
         public String toString() {
@@ -213,7 +214,7 @@ public class XhtmlWriter extends Writer {
          * @return builder with one attribute, attr builder if value is null
          */
         public static OptionalAttributes attr(String name, String value) {
-            Assert.isTrue(name != null && value != null || value == null);
+            Assert.isTrue(name != null || value == null);
             OptionalAttributes attributeBuilder = new OptionalAttributes();
             addAttributeIfValueNotNull(name, value, attributeBuilder);
             return attributeBuilder;
@@ -246,7 +247,7 @@ public class XhtmlWriter extends Writer {
     }
 
 
-    public void writeLinks(List<Link> links) throws IOException {
+    public void writeLinks(Links links) throws IOException {
         for (Link link : links) {
 
             if (link instanceof Affordance) {
@@ -279,7 +280,7 @@ public class XhtmlWriter extends Writer {
                                 // GET without params is simple <a href>
                                 writeAnchor(OptionalAttributes.attr("href", affordance.expand()
                                         .getHref())
-                                        .and("rel", affordance.getRel()), affordance.getRel());
+                                        .and("rel", affordance.getRel().value()), affordance.getRel().value());
                                 endDiv();
                             } else {
                                 appendForm(affordance, actionDescriptor);
@@ -384,11 +385,10 @@ public class XhtmlWriter extends Writer {
                 input(variableName, Type.TEXT);
             }
         } else {
-            String rel = link.getRel();
-            String title = (rel != null ? rel : link.getHref());
+            String title = link.getRel().value();
             // TODO: write html <link> instead of anchor  <a> here?
             writeAnchor(OptionalAttributes.attr("href", link.getHref())
-                    .and("rel", link.getRel()), title);
+                    .and("rel", link.getRel().value()), title);
         }
     }
 

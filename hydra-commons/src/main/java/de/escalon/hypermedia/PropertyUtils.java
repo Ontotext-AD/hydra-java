@@ -7,7 +7,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -41,7 +40,7 @@ public class PropertyUtils {
         try {
             PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
                     .getPropertyDescriptors();
-            Map<String, PropertyDescriptor> ret = new LinkedHashMap<String, PropertyDescriptor>();
+            Map<String, PropertyDescriptor> ret = new LinkedHashMap<>();
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                 ret.put(propertyDescriptor.getName(), propertyDescriptor);
             }
@@ -122,8 +121,7 @@ public class PropertyUtils {
             }
             return propertyValue;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read property " + paramName + " from " + currentCallValue.toString
-                    (), e);
+            throw new RuntimeException("Failed to read property " + paramName + " from " + currentCallValue, e);
         }
     }
 

@@ -2,16 +2,15 @@ package de.escalon.hypermedia.sample.beans.store;
 
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.sample.model.store.OrderStatus;
-import org.springframework.hateoas.ResourceSupport;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.hateoas.RepresentationModel;
 
 /**
  * Created by Dietrich on 17.02.2015.
  */
-public class Order extends ResourceSupport {
-    private List<Product> items = new ArrayList<Product>();
+public class Order extends RepresentationModel<Order> {
+    private List<Product> items = new ArrayList<>();
     private Offer acceptedOffer;
     private Store seller;
     private OrderStatus orderStatus;

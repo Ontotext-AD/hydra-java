@@ -6,7 +6,7 @@ import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.sample.beans.store.Store;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,14 +49,14 @@ public class StoreController {
         return store;
     }
 
-    public HttpEntity<Resources<Offer>> getOffers() {
-        Resources<Offer> offers = new Resources<Offer>(
+    public HttpEntity<CollectionModel<Offer>> getOffers() {
+        CollectionModel<Offer> offers = CollectionModel.of(
                 mockOffers());
-        return new HttpEntity<Resources<Offer>>(offers);
+        return new HttpEntity<>(offers);
     }
 
     private List<Offer> mockOffers() {
-        List<Offer> offers = new ArrayList<Offer>();
+        List<Offer> offers = new ArrayList<>();
         offers.add(createOffer(productController.getProduct("9052001"), 2.80));
         offers.add(createOffer(productController.getProduct("9052002"), 1.40));
         offers.add(createOffer(productController.getProduct("9052003"), 1.10));
@@ -92,6 +92,4 @@ public class StoreController {
         offer.setPriceCurrency(Currency.getInstance("EUR"));
         return offer;
     }
-
-
 }

@@ -1,9 +1,9 @@
 package de.escalon.hypermedia;
 
 import de.escalon.hypermedia.affordance.DataType;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class ResourceTraversal {
 
-    static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
+    static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<>(Arrays.asList("class", "links", "id"));
 
     static class NullValue {
 
@@ -30,23 +30,23 @@ public class ResourceTraversal {
 
         try {
             // TODO: move all returns to else branch of property descriptor handling
-            if (object instanceof Resource) {
-                Resource<?> resource = (Resource<?>) object;
+            if (object instanceof EntityModel) {
+                EntityModel<?> resource = (EntityModel<?>) object;
 
                 if(!visitor.visitLinks(resource.getLinks())) {
                     return;
                 }
                 traverseResource(visitor, resource.getContent());
                 return;
-            } else if (object instanceof Resources) {
-                Resources<?> resources = (Resources<?>) object;
+            } else if (object instanceof CollectionModel) {
+                CollectionModel<?> resources = (CollectionModel<?>) object;
                 if(!visitor.visitLinks(resources.getLinks())) {
                     return;
                 }
                 traverseResource(visitor, resources.getContent());
                 return;
-            } else if (object instanceof ResourceSupport) {
-                ResourceSupport resource = (ResourceSupport) object;
+            } else if (object instanceof RepresentationModel) {
+                RepresentationModel<?> resource = (RepresentationModel<?>) object;
                 if(!visitor.visitLinks(resource.getLinks())) {
                     return;
                 }

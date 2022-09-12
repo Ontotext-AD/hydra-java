@@ -45,11 +45,11 @@ public class PartialUriTemplateComponents {
      */
     public PartialUriTemplateComponents(String baseUri, String queryHead, String queryTail, String
             fragmentIdentifier, List<String> variableNames) {
-        Assert.notNull(baseUri);
-        Assert.notNull(queryHead);
-        Assert.notNull(queryTail);
-        Assert.notNull(fragmentIdentifier);
-        Assert.notNull(variableNames);
+        Assert.notNull(baseUri, "The baseUri parameter should not be null");
+        Assert.notNull(queryHead, "The queryHead parameter should not be null");
+        Assert.notNull(queryTail, "The queryTail parameter should not be null");
+        Assert.notNull(fragmentIdentifier, "The fragmentIdentifier parameter should not be null");
+        Assert.notNull(variableNames, "The variableNames parameter should not be null");
         this.baseUri = baseUri;
         this.queryHead = queryHead;
         this.queryTail = queryTail;
@@ -99,7 +99,7 @@ public class PartialUriTemplateComponents {
                 query.append("{?")
                         .append(queryTail)
                         .append("}");
-            } else if (queryHead.length() > 0) {
+            } else {
                 query.append(queryHead)
                         .append("{&")
                         .append(queryTail)

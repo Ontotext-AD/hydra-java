@@ -1,10 +1,14 @@
 package de.escalon.hypermedia.spring.xhtml;
 
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+
 import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import de.escalon.hypermedia.spring.sample.test.CreativeWork;
 import de.escalon.hypermedia.spring.sample.test.Event;
 import de.escalon.hypermedia.spring.sample.test.EventStatusType;
+import java.io.StringWriter;
+import java.io.Writer;
 import org.custommonkey.xmlunit.XMLAssert;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -22,13 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.Arrays;
-
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * Created by Dietrich on 06.06.2015.
@@ -49,7 +48,7 @@ public class XhtmlWriterTest {
 
     @Configuration
     @EnableWebMvc
-    static class WebConfig extends WebMvcConfigurerAdapter {
+    static class WebConfig implements WebMvcConfigurer {
 
     }
 
@@ -75,7 +74,7 @@ public class XhtmlWriterTest {
                         .EVENT_SCHEDULED)))
                 .withSelfRel();
 
-        xhtml.writeLinks(Arrays.asList(affordance));
+        xhtml.writeLinks(Links.of(affordance));
 
         String xml = writer.toString();
         System.out.println(xml);
@@ -110,7 +109,7 @@ public class XhtmlWriterTest {
                         .EVENT_SCHEDULED)))
                 .withSelfRel();
 
-        xhtml.writeLinks(Arrays.asList(affordance));
+        xhtml.writeLinks(Links.of(affordance));
 
         String xml = writer.toString();
         System.out.println(xml);
@@ -147,7 +146,7 @@ public class XhtmlWriterTest {
                         .EVENT_SCHEDULED)))
                 .withSelfRel();
 
-        xhtml.writeLinks(Arrays.asList(affordance));
+        xhtml.writeLinks(Links.of(affordance));
 
         String xml = writer.toString();
         System.out.println(xml);
@@ -182,7 +181,7 @@ public class XhtmlWriterTest {
                         .EVENT_SCHEDULED)))
                 .withSelfRel();
 
-        xhtml.writeLinks(Arrays.asList(affordance));
+        xhtml.writeLinks(Links.of(affordance));
 
         String xml = writer.toString();
         System.out.println(xml);
@@ -213,7 +212,7 @@ public class XhtmlWriterTest {
                         .EVENT_SCHEDULED)))
                 .withSelfRel();
 
-        xhtml.writeLinks(Arrays.asList(affordance));
+        xhtml.writeLinks(Links.of(affordance));
 
         String xml = writer.toString();
         System.out.println(xml);

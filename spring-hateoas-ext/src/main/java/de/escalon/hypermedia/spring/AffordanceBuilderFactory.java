@@ -22,19 +22,19 @@ import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.affordance.PartialUriTemplate;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.hateoas.MethodLinkBuilderFactory;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.core.AnnotationMappingDiscoverer;
-import org.springframework.hateoas.core.DummyInvocationUtils;
-import org.springframework.hateoas.core.MappingDiscoverer;
-import org.springframework.hateoas.core.MethodParameters;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.server.MethodLinkBuilderFactory;
+import org.springframework.hateoas.server.core.AnnotationMappingDiscoverer;
+import org.springframework.hateoas.server.core.LastInvocationAware;
+import org.springframework.hateoas.server.core.MappingDiscoverer;
+import org.springframework.hateoas.server.core.MethodInvocation;
+import org.springframework.hateoas.server.core.MethodParameters;
 import org.springframework.http.HttpEntity;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.beans.PropertyDescriptor;
@@ -50,13 +50,27 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
     private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
 
+    @NotNull
     @Override
-    public AffordanceBuilder linkTo(Method method, Object... parameters) {
+    public AffordanceBuilder linkTo(@NotNull Method method) {
+        return linkTo(method.getDeclaringClass(), method);
+    }
+
+    @NotNull
+    @Override
+    public AffordanceBuilder linkTo(@NotNull Method method, @NotNull Object... parameters) {
         return linkTo(method.getDeclaringClass(), method, parameters);
     }
 
+    @NotNull
     @Override
-    public AffordanceBuilder linkTo(Class<?> controller, Method method, Object... parameters) {
+    public AffordanceBuilder linkTo(@NotNull Class<?> type, @NotNull Method method) {
+        return linkTo(type, method, new Object[0]);
+    }
+
+    @NotNull
+    @Override
+    public AffordanceBuilder linkTo(@NotNull Class<?> controller, @NotNull Method method, Object... parameters) {
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(controller, method);
 
@@ -68,10 +82,9 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + query;
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
-                .build()
-                .toString() + mapping);
+                .build() + mapping);
 
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
         Iterator<String> variableNames = partialUriTemplate.getVariableNames()
                 .iterator();
         // there may be more or less mapping variables than arguments
@@ -118,21 +131,22 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return ret.toString();
     }
 
+    @NotNull
     @Override
-    public AffordanceBuilder linkTo(Class<?> target) {
+    public AffordanceBuilder linkTo(@NotNull Class<?> target) {
         return linkTo(target, new Object[0]);
     }
 
-
+    @NotNull
     @Override
-    public AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
-        Assert.notNull(controller);
+    public AffordanceBuilder linkTo(@NotNull Class<?> controller, Object... parameters) {
+        Assert.notNull(controller, "Controller should be not null");
 
         String mapping = MAPPING_DISCOVERER.getMapping(controller);
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
 
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
         Iterator<String> names = partialUriTemplate.getVariableNames()
                 .iterator();
         // there may be more or less mapping variables than arguments
@@ -145,21 +159,23 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return new AffordanceBuilder().slash(partialUriTemplate.expand(values));
     }
 
+    @NotNull
     @Override
-    public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
+    public AffordanceBuilder linkTo(@NotNull Class<?> controller, @NotNull Map<String, ?> parameters) {
         String mapping = MAPPING_DISCOVERER.getMapping(controller);
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
         return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
     }
 
+    @NotNull
     @Override
-    public AffordanceBuilder linkTo(Object invocationValue) {
+    public AffordanceBuilder linkTo(@NotNull Object invocationValue) {
 
-        Assert.isInstanceOf(DummyInvocationUtils.LastInvocationAware.class, invocationValue);
-        DummyInvocationUtils.LastInvocationAware invocations = (DummyInvocationUtils.LastInvocationAware)
+        Assert.isInstanceOf(LastInvocationAware.class, invocationValue);
+        LastInvocationAware invocations = (LastInvocationAware)
                 invocationValue;
 
-        DummyInvocationUtils.MethodInvocation invocation = invocations.getLastInvocation();
+        MethodInvocation invocation = invocations.getLastInvocation();
         Method invokedMethod = invocation.getMethod();
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(invokedMethod);
@@ -172,11 +188,10 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + query;
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
-                .build()
-                .toString() + mapping);
+                .build() + mapping);
 
 
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
         Iterator<String> variableNames = partialUriTemplate.getVariableNames()
                 .iterator();
         while (classMappingParameters.hasNext()) {
@@ -201,11 +216,11 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     }
 
     private Map<String, String> getInputBeanParamNames(Method invokedMethod) {
-        MethodParameters parameters = new MethodParameters(invokedMethod);
+        MethodParameters parameters = MethodParameters.of(invokedMethod);
 
         final List<MethodParameter> inputParams = parameters.getParametersWith(Input.class);
 
-        Map<String, String> ret = new LinkedHashMap<String, String>(inputParams.size());
+        Map<String, String> ret = new LinkedHashMap<>(inputParams.size());
         for (MethodParameter inputParam : inputParams) {
             Class<?> parameterType = inputParam.getParameterType();
             // only use @Input param which is a bean or map and has no other annotations
@@ -214,7 +229,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                     !(DataType.isSingleValueType(parameterType) || DataType.isArrayOrCollection(parameterType))) {
                 Input inputAnnotation = inputParam.getParameterAnnotation(Input.class);
 
-                Set<String> explicitlyIncludedParams = new LinkedHashSet<String>(inputParams.size());
+                Set<String> explicitlyIncludedParams = new LinkedHashSet<>(inputParams.size());
 
                 Collections.addAll(explicitlyIncludedParams, inputAnnotation.include());
                 Collections.addAll(explicitlyIncludedParams, inputAnnotation.hidden());
@@ -280,9 +295,9 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     }
 
     private Map<String, String> getRequestParamNames(Method invokedMethod) {
-        MethodParameters parameters = new MethodParameters(invokedMethod);
+        MethodParameters parameters = MethodParameters.of(invokedMethod);
         final List<MethodParameter> requestParams = parameters.getParametersWith(RequestParam.class);
-        Map<String, String> params = new LinkedHashMap<String, String>(requestParams.size());
+        Map<String, String> params = new LinkedHashMap<>(requestParams.size());
         for (MethodParameter requestParam : requestParams) {
             RequestParam requestParamAnnotation = requestParam.getParameterAnnotation(RequestParam.class);
             params.put(requestParam.getParameterName(), requestParamAnnotation.value()
@@ -384,12 +399,8 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             if (HttpEntity.class.isAssignableFrom(cls)) {
                 Type[] typeArguments = t.getActualTypeArguments();
                 ret = containsCollection(typeArguments[0]);
-            } else if (Resources.class.isAssignableFrom(cls) ||
-                    Collection.class.isAssignableFrom(cls)) {
-                ret = true;
-            } else {
-                ret = false;
-            }
+            } else ret = CollectionModel.class.isAssignableFrom(cls) ||
+                    Collection.class.isAssignableFrom(cls);
         } else if (genericReturnType instanceof GenericArrayType) {
             ret = true;
         } else if (genericReturnType instanceof WildcardType) {
@@ -399,7 +410,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             ret = false;
         } else if (genericReturnType instanceof Class) {
             Class<?> cls = (Class<?>) genericReturnType;
-            ret = Resources.class.isAssignableFrom(cls) ||
+            ret = CollectionModel.class.isAssignableFrom(cls) ||
                     Collection.class.isAssignableFrom(cls);
         } else {
             ret = false;
@@ -447,8 +458,8 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
         Assert.notNull(method, "MethodInvocation must not be null!");
 
-        MethodParameters parameters = new MethodParameters(method);
-        Map<String, ActionInputParameter> result = new HashMap<String, ActionInputParameter>();
+        MethodParameters parameters = MethodParameters.of(method);
+        Map<String, ActionInputParameter> result = new HashMap<>();
 
         for (MethodParameter parameter : parameters.getParametersWith(annotation)) {
             final int parameterIndex = parameter.getParameterIndex();

@@ -15,7 +15,8 @@ package de.escalon.hypermedia.spring.sample.test;
 
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
-import org.springframework.hateoas.Resources;
+import java.util.Collections;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,15 +35,15 @@ import java.util.List;
 public class ReviewController {
 
     @SuppressWarnings("unchecked")
-    List<List<Review>> reviews = Arrays.asList(Arrays.asList(new Review("Five peeps, one guitar", new Rating(5))),
-            Arrays.asList(new Review("Great actress, special atmosphere", new Rating(5))));
+    List<List<Review>> reviews = Arrays.asList(Collections.singletonList(new Review("Five peeps, one guitar", new Rating(5))),
+            Collections.singletonList(new Review("Great actress, special atmosphere", new Rating(5))));
 
     @RequestMapping(value = "/events/{eventId}", method = RequestMethod.GET)
     @ResponseBody
-    public Resources<Review> getReviews(@PathVariable int eventId, @RequestParam(required = false) String ratingValue) {
-        final Resources<Review> reviewResources = new Resources<Review>(reviews.get(eventId));
+    public CollectionModel<Review> getReviews(@PathVariable int eventId, @RequestParam(required = false) String ratingValue) {
+        final CollectionModel<Review> reviewResources = CollectionModel.of(reviews.get(eventId));
         reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyEventController.class)
-                .getEvent((Integer) null)) // pass null to create template
+                .getEvent( null)) // pass null to create template
                 .withRel("hydra:search"));
         return reviewResources;
     }
@@ -59,7 +60,7 @@ public class ReviewController {
         headers.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
                 .getReviews(eventId, null))
                 .toUri());
-        return new ResponseEntity(headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     @Action("ReviewAction")
@@ -71,6 +72,6 @@ public class ReviewController {
         headers.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
                 .getReviews(eventId, null))
                 .toUri());
-        return new ResponseEntity(headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 }

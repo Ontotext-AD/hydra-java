@@ -30,7 +30,7 @@ public class BeanUtil {
      * @return property paths
      */
     public static List<String> getPropertyPaths(Class<?> clazz) {
-        return addClassPropertyPaths(new ArrayList<String>(), "", clazz);
+        return addClassPropertyPaths(new ArrayList<>(), "", clazz);
     }
 
     private static List<String> addClassPropertyPaths(List<String> ret, String currentPath, Class<?> clazz) {

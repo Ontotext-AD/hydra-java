@@ -18,9 +18,8 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.hydra.serialize.ProxyUnwrapper;
 import de.escalon.hypermedia.spring.HypermediaTypes;
+import java.util.Collections;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-
-import java.util.Arrays;
 
 /**
  * Created by dschulten on 04.10.2014.
@@ -46,6 +45,6 @@ public class HydraMessageConverter extends MappingJackson2HttpMessageConverter {
         objectMapper.registerModule(new JacksonHydraModule(proxyUnwrapper));
         this.setObjectMapper(objectMapper);
         this.setSupportedMediaTypes(
-                Arrays.asList(HypermediaTypes.APPLICATION_JSONLD));
+                Collections.singletonList(HypermediaTypes.APPLICATION_JSONLD));
     }
 }

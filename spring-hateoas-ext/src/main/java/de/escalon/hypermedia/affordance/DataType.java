@@ -13,7 +13,7 @@
 
 package de.escalon.hypermedia.affordance;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Calendar;
@@ -37,18 +37,13 @@ public class DataType {
      */
     public static boolean isSingleValueType(Class<?> clazz) {
         boolean ret;
-        if (isNumber(clazz)
+        ret = isNumber(clazz)
                 || isBoolean(clazz)
                 || isString(clazz)
                 || isEnum(clazz)
                 || isDate(clazz)
                 || isCalendar(clazz)
-                || isCurrency(clazz)
-                ) {
-            ret = true;
-        } else {
-            ret = false;
-        }
+                || isCurrency(clazz);
         return ret;
     }
 

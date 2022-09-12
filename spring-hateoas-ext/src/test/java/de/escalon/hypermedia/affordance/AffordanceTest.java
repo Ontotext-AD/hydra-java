@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.hateoas.LinkRelation;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,7 +39,7 @@ public class AffordanceTest {
     public void testConstructorWithSingleRel() {
         final Affordance affordance = new Affordance("http://localhost/things/{id}", "thing");
         assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertEquals("thing", affordance.getRel());
+        assertEquals(LinkRelation.of("thing"), affordance.getRel());
         Assert.assertThat(affordance.getRels(), Matchers.contains("thing"));
     }
 
@@ -47,7 +48,7 @@ public class AffordanceTest {
         final Affordance affordance = new Affordance("http://localhost/things/{id}",
                 "start", "http://example.net/relation/other");
         assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertEquals("start", affordance.getRel());
+        assertEquals(LinkRelation.of("start"), affordance.getRel());
         Assert.assertThat(affordance.getRels(), Matchers.contains("start", "http://example.net/relation/other"));
     }
 
@@ -94,7 +95,7 @@ public class AffordanceTest {
     public void testExpandWithArgumentsMap() {
         final Affordance affordance = new Affordance("http://localhost/things{?id}", "thing");
 
-        Map<String, Object> arguments = new HashMap<String, Object>();
+        Map<String, Object> arguments = new HashMap<>();
         arguments.put("id", 101);
 
         assertEquals("http://localhost/things?id=101", affordance.expand(101)
@@ -113,7 +114,7 @@ public class AffordanceTest {
     public void expandsSimpleStringVariablesPartially() {
         final Affordance affordance = new Affordance("/protected/res/documents/index.html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index.html&fragment=/contractDetails/{ref}", "thing");
 
-        Map<String, Object> args = new HashMap<String, Object>();
+        Map<String, Object> args = new HashMap<>();
         args.put("ref", 1234567890);
 
         assertEquals("/protected/res/documents/index.html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index.html&fragment=/contractDetails/1234567890", affordance.expandPartially(args).getHref());
