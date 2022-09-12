@@ -14,6 +14,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentLruCache;
 import org.springframework.util.ReflectionUtils;
 
+/**
+ *  This is a copy of the original {@link org.springframework.hateoas.server.core.DummyInvocationUtils},
+ *  but with the check from the previous versions for  the GET_INVOCATIONS and GET_OBJECT_PARAMETERS,
+ *  which in the latest version 1.5.1 return proxy instead of  the method.
+ *  Should be removed when there is a fix in the spring-hateous library
+ */
 public class OntoDummyInvocationUtils {
   private static final ThreadLocal<ConcurrentLruCache<CacheKey, Object>> CACHE =
       ThreadLocal.withInitial(

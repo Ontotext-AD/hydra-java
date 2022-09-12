@@ -10,7 +10,12 @@ import org.springframework.hateoas.server.core.MethodInvocation;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
+/**
+ *  This is a copy of the original {@link org.springframework.hateoas.server.core.DefaultMethodInvocation},
+ *  to fix the regression in the latest version of the hateous in
+ *  {@link org.springframework.hateoas.server.core.DummyInvocationUtils},  because the class is package private.
+ *  Should be removed when there is a fix in the spring-hateous library
+ */
 public class OntoDefaultMethodInvocation implements MethodInvocation, LastInvocationAware {
 	private final Class<?> type;
 	private final Method method;
