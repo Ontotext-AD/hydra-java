@@ -26,7 +26,7 @@
 	<parent>
         <groupId>de.escalon.hypermedia</groupId>
         <artifactId>hydra-java</artifactId>
-        <version>0.4.4-onto-SNAPSHOT</version>
+        <version>0.4.3-onto-tr1</version>
     </parent>
 
     <artifactId>hydra-jsonld</artifactId>
