@@ -75,6 +75,10 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         super(source, toIgnore, toInclude);
     }
 
+    public JacksonHydraSerializer(BeanSerializerBase src, BeanPropertyWriter[] properties, BeanPropertyWriter[] filteredProperties) {
+        super(src, properties, filteredProperties);
+    }
+
     public BeanSerializerBase withObjectIdWriter(
             ObjectIdWriter objectIdWriter) {
         return new JacksonHydraSerializer(this, objectIdWriter)
@@ -114,8 +118,8 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     @Override
-    protected BeanSerializerBase withProperties(BeanPropertyWriter[] beanPropertyWriters, BeanPropertyWriter[] beanPropertyWriters1) {
-        return this;
+    protected BeanSerializerBase withProperties(BeanPropertyWriter[] properties, BeanPropertyWriter[] filteredProperties) {
+        return new JacksonHydraSerializer(this, properties, filteredProperties);
     }
 
     public JacksonHydraSerializer withLdContextFactory( LdContextFactory factory ) {
