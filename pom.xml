@@ -14,6 +14,8 @@
     </description>
 
     <properties>
+        <internal.repo>http://maven.ontotext.com/content/repositories/internal</internal.repo>
+        <snapshots.repo>http://maven.ontotext.com/content/repositories/snapshots</snapshots.repo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>5.3.22</spring.version>
         <jackson.version>2.9.8</jackson.version>
@@ -61,9 +63,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/dschulten/hydra-java</url>
-        <connection>scm:git:https://github.com/dschulten/hydra-java.git</connection>
-        <developerConnection>scm:git:https://github.com/dschulten/hydra-java.git</developerConnection>
+        <connection>scm:git:git@github.com:Ontotext-AD/hydra-java.git</connection>
+        <developerConnection>scm:git:git@github.com:Ontotext-AD/hydra-java.git</developerConnection>
+        <url>https://github.com/Ontotext-AD/hydra-java</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -239,7 +241,10 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.9.1</version>
+                    <version>3.4.1</version>
+                    <configuration>
+                        <source>8</source>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>attach-javadocs</id>
@@ -253,7 +258,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.5</version>
+                    <version>3.0.1</version>
                     <executions>
                         <execution>
                             <id>sign-artifacts</id>
@@ -268,7 +273,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>3.0.0-M6</version>
                     <configuration>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <useReleaseProfile>false</useReleaseProfile>
@@ -282,7 +287,7 @@
                         <dependency>
                             <groupId>org.apache.maven.scm</groupId>
                             <artifactId>maven-scm-provider-jgit</artifactId>
-                            <version>1.9.2</version>
+                            <version>1.13.0</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -313,9 +318,15 @@
     </build>
 
     <distributionManagement>
+        <repository>
+            <id>internal</id>
+            <name>Platform Releases repository</name>
+            <url>${internal.repo}</url>
+        </repository>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>snapshots</id>
+            <name>Platform Snapshots repository</name>
+            <url>${snapshots.repo}</url>
         </snapshotRepository>
     </distributionManagement>
 
