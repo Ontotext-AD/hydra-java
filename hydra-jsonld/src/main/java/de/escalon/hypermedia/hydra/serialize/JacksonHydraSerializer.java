@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.jsontype.impl.AsExistingPropertyTypeSerializer;
+import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
 import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
 import com.fasterxml.jackson.databind.ser.impl.WritableObjectId;
@@ -70,8 +71,12 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     public JacksonHydraSerializer(BeanSerializerBase source,
-                                  Set<String> toIgnore) {
-        super(source, toIgnore);
+                                  Set<String> toIgnore, Set<String> toInclude) {
+        super(source, toIgnore, toInclude);
+    }
+
+    public JacksonHydraSerializer(BeanSerializerBase src, BeanPropertyWriter[] properties, BeanPropertyWriter[] filteredProperties) {
+        super(src, properties, filteredProperties);
     }
 
     public BeanSerializerBase withObjectIdWriter(
@@ -80,11 +85,11 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 		        .withLdContextFactory( this.ldContextFactory );
     }
 
-	@Override
-	protected BeanSerializerBase withIgnorals( Set<String> toIgnore ) {
-		return new JacksonHydraSerializer(this, toIgnore)
-				.withLdContextFactory( this.ldContextFactory );
-	}
+    @Override
+    protected BeanSerializerBase withByNameInclusion(Set<String> toIgnore, Set<String> toInclude) {
+        return new JacksonHydraSerializer(this, toIgnore, toInclude)
+                .withLdContextFactory( this.ldContextFactory );
+    }
 
     @Override
     protected BeanSerializerBase asArraySerializer() {
@@ -110,6 +115,11 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         ret.withFilterId(filterId);
         ret.withLdContextFactory( this.ldContextFactory );
         return ret;
+    }
+
+    @Override
+    protected BeanSerializerBase withProperties(BeanPropertyWriter[] properties, BeanPropertyWriter[] filteredProperties) {
+        return new JacksonHydraSerializer(this, properties, filteredProperties);
     }
 
     public JacksonHydraSerializer withLdContextFactory( LdContextFactory factory ) {
