@@ -50,27 +50,23 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
     private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Method method) {
+    public AffordanceBuilder linkTo( Method method) {
         return linkTo(method.getDeclaringClass(), method);
     }
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Method method, @NotNull Object... parameters) {
+    public AffordanceBuilder linkTo(Method method,  Object... parameters) {
         return linkTo(method.getDeclaringClass(), method, parameters);
     }
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Class<?> type, @NotNull Method method) {
+    public AffordanceBuilder linkTo(Class<?> type, Method method) {
         return linkTo(type, method, new Object[0]);
     }
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Class<?> controller, @NotNull Method method, Object... parameters) {
+    public AffordanceBuilder linkTo(Class<?> controller, Method method, Object... parameters) {
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(controller, method);
 
@@ -131,15 +127,13 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return ret.toString();
     }
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Class<?> target) {
+    public AffordanceBuilder linkTo(Class<?> target) {
         return linkTo(target, new Object[0]);
     }
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Class<?> controller, Object... parameters) {
+    public AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
         Assert.notNull(controller, "Controller should be not null");
 
         String mapping = MAPPING_DISCOVERER.getMapping(controller);
@@ -159,17 +153,15 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return new AffordanceBuilder().slash(partialUriTemplate.expand(values));
     }
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Class<?> controller, @NotNull Map<String, ?> parameters) {
+    public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
         String mapping = MAPPING_DISCOVERER.getMapping(controller);
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
         return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
     }
 
-    @NotNull
     @Override
-    public AffordanceBuilder linkTo(@NotNull Object invocationValue) {
+    public AffordanceBuilder linkTo(Object invocationValue) {
 
         Assert.isInstanceOf(LastInvocationAware.class, invocationValue);
         LastInvocationAware invocations = (LastInvocationAware)

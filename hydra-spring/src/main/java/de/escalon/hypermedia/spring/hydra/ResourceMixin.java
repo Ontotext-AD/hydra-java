@@ -39,7 +39,6 @@ public abstract class ResourceMixin<T> extends EntityModel<T> {
         super(content, links);
     }
 
-    @NotNull
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
