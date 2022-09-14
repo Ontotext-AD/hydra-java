@@ -46,7 +46,7 @@ public class UberJackson2HttpMessageConverter extends AbstractHttpMessageConvert
   }
 
   @Override
-  protected boolean supports(@NotNull Class<?> clazz) {
+  protected boolean supports(Class<?> clazz) {
     final boolean ret;
     ret =
         RepresentationModel.class.isAssignableFrom(clazz)
@@ -55,16 +55,13 @@ public class UberJackson2HttpMessageConverter extends AbstractHttpMessageConvert
     return ret;
   }
 
-  @NonNull
   @Override
-  protected Object readInternal(
-          @NotNull Class<?> clazz, @NotNull HttpInputMessage inputMessage)
+  protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
       throws HttpMessageNotReadableException {
     // TODO read uber data
     return null;
   }
 
-  @NonNull
   @Override
   protected void writeInternal(Object t, HttpOutputMessage outputMessage)
       throws IOException, HttpMessageNotWritableException {

@@ -32,8 +32,6 @@ import org.springframework.hateoas.Links;
 @Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")
 @Expose("hydra:Collection")
 public abstract class CollectionModelMixin<T> extends CollectionModel<T> {
-
-    @NotNull
     @Override
     @JsonProperty("hydra:member")
     @ContextProvider
@@ -41,7 +39,6 @@ public abstract class CollectionModelMixin<T> extends CollectionModel<T> {
         return super.getContent();
     }
 
-    @NotNull
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped

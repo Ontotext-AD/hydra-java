@@ -20,7 +20,6 @@ import org.springframework.hateoas.PagedModel;
 @Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")
 @Expose("hydra:Collection")
 public abstract class PagedModelMixin<T> extends PagedModel<T> {
-    @NotNull
     @Override
     @JsonProperty("hydra:member")
     @ContextProvider
@@ -28,7 +27,6 @@ public abstract class PagedModelMixin<T> extends PagedModel<T> {
         return super.getContent();
     }
 
-    @NotNull
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
