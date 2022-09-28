@@ -80,11 +80,6 @@
             <groupId>com.github.jsonld-java</groupId>
             <artifactId>jsonld-java</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.springframework.plugin</groupId>
-            <artifactId>spring-plugin-core</artifactId>
-        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
