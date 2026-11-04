@@ -13,26 +13,13 @@
     <parent>
         <artifactId>hydra-java</artifactId>
         <groupId>de.escalon.hypermedia</groupId>
-        <version>0.4.5-SNAPSHOT</version>
+        <version>0.5.0-onto-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>hydra-spring</artifactId>
 
     <name>${project.groupId}:${project.artifactId}:${project.version}</name>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin}</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
     <dependencies>
         <dependency>
@@ -84,7 +71,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -111,12 +97,12 @@
 
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
+            <artifactId>hamcrest</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
+            <artifactId>mockito-core</artifactId>
         </dependency>
 
         <dependency>
