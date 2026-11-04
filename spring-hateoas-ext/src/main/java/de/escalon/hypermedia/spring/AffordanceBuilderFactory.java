@@ -141,7 +141,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     public AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
         Assert.notNull(controller, "Controller should be not null");
 
-        String mapping = MAPPING_DISCOVERER.getMapping(controller, null);
+        String mapping = typeLevelMapping(controller);
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
 
@@ -160,7 +160,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
     @Override
     public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
-        String mapping = MAPPING_DISCOVERER.getMapping(controller, null);
+        String mapping = typeLevelMapping(controller);
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
         return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
     }
@@ -423,6 +423,17 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             ret = null;
         }
         return ret;
+    }
+
+    /**
+     * The raw class-level request mapping of the controller (no method mapping joined, no regex cleanup), as returned
+     * by Spring HATEOAS 1.x {@code MappingDiscoverer#getMapping(Class)}.
+     *
+     * @param controller controller type
+     * @return class-level mapping or {@code null} if the controller has none
+     */
+    private static String typeLevelMapping(Class<?> controller) {
+        return MAPPING_DISCOVERER.getMapping(controller, null);
     }
 
     private static RequestMethod getHttpMethod(Method method) {
