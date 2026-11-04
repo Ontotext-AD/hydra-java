@@ -20,7 +20,8 @@ import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.affordance.DataType;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.core.DefaultParameterNameDiscoverer;
+import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
@@ -38,6 +39,12 @@ import java.util.*;
  * @author Dietrich Schulten
  */
 public class SpringActionInputParameter implements ActionInputParameter {
+
+    /**
+     * Spring 6.1 removed bytecode local-variable-table based name discovery; parameter names now come from the
+     * {@code -parameters} compiler flag (or Kotlin reflection) via the default discoverer.
+     */
+    private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
 
     private final TypeDescriptor typeDescriptor;
     private final RequestBody requestBody;
@@ -442,7 +449,7 @@ public class SpringActionInputParameter implements ActionInputParameter {
         if (ret == null) {
             String parameterName = methodParameter.getParameterName();
             if (parameterName == null) {
-                methodParameter.initParameterNameDiscovery(new LocalVariableTableParameterNameDiscoverer());
+                methodParameter.initParameterNameDiscovery(PARAMETER_NAME_DISCOVERER);
                 ret = methodParameter.getParameterName();
             } else {
                 ret = parameterName;

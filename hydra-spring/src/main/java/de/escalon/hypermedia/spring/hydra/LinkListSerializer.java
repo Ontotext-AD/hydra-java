@@ -534,7 +534,7 @@ public class LinkListSerializer extends StdSerializer<Links> {
 
     private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName, String
             vocabulary, String vocabularyPrefixWithColon) {
-        Assert.notNull(vocabulary);
+        Assert.notNull(vocabulary, "vocabulary must not be null");
         String ret;
         if (vocabulary.equals(currentVocab)) {
             ret = propertyOrClassName;

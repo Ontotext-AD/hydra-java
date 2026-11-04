@@ -30,7 +30,6 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.server.MethodLinkBuilderFactory;
 import org.springframework.hateoas.server.core.AnnotationMappingDiscoverer;
 import org.springframework.hateoas.server.core.LastInvocationAware;
-import org.springframework.hateoas.server.core.MappingDiscoverer;
 import org.springframework.hateoas.server.core.MethodInvocation;
 import org.springframework.hateoas.server.core.MethodParameters;
 import org.springframework.http.HttpEntity;
@@ -48,7 +47,13 @@ import java.util.*;
  */
 public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<AffordanceBuilder> {
 
-    private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
+    /**
+     * Spring HATEOAS 2+ replaced {@code MappingDiscoverer#getMapping(..)} with {@code getUriMapping(..)}. The public
+     * {@link AnnotationMappingDiscoverer#getMapping(Class, Method)} still returns the plain mapping string and, with a
+     * {@code null} method, yields the raw type-level mapping, exactly like HATEOAS 1.x {@code getMapping(Class)}.
+     */
+    private static final AnnotationMappingDiscoverer MAPPING_DISCOVERER =
+            new AnnotationMappingDiscoverer(RequestMapping.class);
 
     @Override
     public AffordanceBuilder linkTo( Method method) {
@@ -136,7 +141,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     public AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
         Assert.notNull(controller, "Controller should be not null");
 
-        String mapping = MAPPING_DISCOVERER.getMapping(controller);
+        String mapping = MAPPING_DISCOVERER.getMapping(controller, null);
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
 
@@ -155,7 +160,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
     @Override
     public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
-        String mapping = MAPPING_DISCOVERER.getMapping(controller);
+        String mapping = MAPPING_DISCOVERER.getMapping(controller, null);
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
         return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
     }
@@ -170,7 +175,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         MethodInvocation invocation = invocations.getLastInvocation();
         Method invokedMethod = invocation.getMethod();
 
-        String pathMapping = MAPPING_DISCOVERER.getMapping(invokedMethod);
+        String pathMapping = MAPPING_DISCOVERER.getMapping(invokedMethod.getDeclaringClass(), invokedMethod);
         Iterator<Object> classMappingParameters = invocations.getObjectParameters();
 
         Map<String, String> requestParamNames = getRequestParamNames(invokedMethod);
