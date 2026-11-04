@@ -1,0 +1,1 @@
+{"@context":{"@vocab":"http://schema.org/","hydra":"http://www.w3.org/ns/hydra/core#"},"@type":"hydra:Collection","@id":"http://localhost:8080/soml?page=0&size=2","hydra:member":[],"hydra:totalItems":0,"hydra:view":{"@type":"hydra:PartialCollectionView"}}
