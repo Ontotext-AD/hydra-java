@@ -14,11 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.UriTemplate;
-import org.springframework.hateoas.mediatype.hal.CurieProvider;
-import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
-import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.hateoas.server.core.AnnotationLinkRelationProvider;
 import org.springframework.hateoas.server.core.DefaultLinkRelationProvider;
@@ -54,7 +49,6 @@ public class Config implements WebMvcConfigurer {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(hydraMessageConverter());
         converters.add(sirenMessageConverter());
-//        converters.add(halConverter());
         converters.add(uberConverter());
         converters.add(xhtmlMessageConverter());
         converters.add(jsonConverter());
@@ -115,31 +109,6 @@ public class Config implements WebMvcConfigurer {
         jacksonConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.valueOf("application/json")));
         jacksonConverter.setObjectMapper(jacksonObjectMapper());
         return jacksonConverter;
-    }
-
-    @Bean
-    public CurieProvider curieProvider() {
-        return new DefaultCurieProvider("ex", UriTemplate.of("http://localhost:8080/webapp/hypermedia-api/rels/{rels}"));
-    }
-
-    @Bean
-    public MappingJackson2HttpMessageConverter halConverter() {
-        CurieProvider curieProvider = curieProvider();
-
-        LinkRelationProvider relProvider = new DelegatingLinkRelationProvider(relProviderRegistry);
-        ObjectMapper halObjectMapper = new ObjectMapper();
-
-        halObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-
-        halObjectMapper.registerModule(new Jackson2HalModule());
-        halObjectMapper.setHandlerInstantiator(new
-                Jackson2HalModule.HalHandlerInstantiator(relProvider, curieProvider, null));
-
-        MappingJackson2HttpMessageConverter halConverter = new
-                MappingJackson2HttpMessageConverter();
-        halConverter.setSupportedMediaTypes(Collections.singletonList(MediaTypes.HAL_JSON));
-        halConverter.setObjectMapper(halObjectMapper);
-        return halConverter;
     }
 
     @Bean

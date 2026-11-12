@@ -52,10 +52,10 @@ public class ReviewController {
     public
     @ResponseBody
     ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
-        Assert.notNull(review);
-        Assert.notNull(review.getReviewRating());
+        Assert.notNull(review, "review must not be null");
+        Assert.notNull(review.getReviewRating(), "reviewRating must not be null");
         Assert.notNull(review.getReviewRating()
-                .getRatingValue());
+                .getRatingValue(), "ratingValue must not be null");
         final HttpHeaders headers = new HttpHeaders();
         headers.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
                 .getReviews(eventId, null))

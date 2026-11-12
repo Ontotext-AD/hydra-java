@@ -63,8 +63,8 @@ public class SpringActionDescriptor implements ActionDescriptor {
      *         used during submit
      */
     public SpringActionDescriptor(String actionName, String httpMethod) {
-        Assert.notNull(actionName);
-        Assert.notNull(httpMethod);
+        Assert.notNull(actionName, "actionName must not be null");
+        Assert.notNull(httpMethod, "httpMethod must not be null");
         this.httpMethod = httpMethod;
         this.actionName = actionName;
     }

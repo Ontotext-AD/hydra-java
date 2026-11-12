@@ -32,7 +32,7 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.util.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -118,7 +118,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
     }
 
     /**
-     * From {@link ServletServerHttpRequest}: Use {@link javax.servlet.ServletRequest#getParameterMap()} to reconstruct
+     * From {@link ServletServerHttpRequest}: Use {@link jakarta.servlet.ServletRequest#getParameterMap()} to reconstruct
      * the body of a form 'POST' providing a predictable outcome as opposed to reading from the body, which can fail if
      * any other code has used ServletRequest to access a parameter thus causing the input stream to be "consumed".
      */

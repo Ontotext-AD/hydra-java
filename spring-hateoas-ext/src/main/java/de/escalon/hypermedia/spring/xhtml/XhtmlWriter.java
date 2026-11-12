@@ -214,7 +214,7 @@ public class XhtmlWriter extends Writer {
          * @return builder with one attribute, attr builder if value is null
          */
         public static OptionalAttributes attr(String name, String value) {
-            Assert.isTrue(name != null || value == null);
+            Assert.isTrue(name != null || value == null, "attribute name must not be null when a value is given");
             OptionalAttributes attributeBuilder = new OptionalAttributes();
             addAttributeIfValueNotNull(name, value, attributeBuilder);
             return attributeBuilder;
@@ -730,7 +730,7 @@ public class XhtmlWriter extends Writer {
         }
         String fieldLabel = requestParamName;
         Type htmlInputFieldType = actionInputParameter.getHtmlInputFieldType();
-        Assert.notNull(htmlInputFieldType);
+        Assert.notNull(htmlInputFieldType, "htmlInputFieldType must not be null");
         String val = value == null ? "" : value.toString();
         beginDiv(OptionalAttributes.attr("class", formGroupClass));
         if (Type.HIDDEN.equals(htmlInputFieldType)) {

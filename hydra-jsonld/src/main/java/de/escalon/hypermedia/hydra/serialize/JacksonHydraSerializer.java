@@ -96,11 +96,12 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     /* Can not:
      *
      * - have Object Id (may be allowed in future)
-     * - have any getter
+     * - have property filter
      *
+     * (Jackson 2.21 dropped the separate any-getter writer; any-getters are regular properties now,
+     * mirroring BeanSerializer#asArraySerializer.)
      */
         if ((_objectIdWriter == null)
-                && (_anyGetterWriter == null)
                 && (_propertyFilterId == null)
                 ) {
             return new BeanAsArraySerializer(this);
