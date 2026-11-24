@@ -1,0 +1,102 @@
+@Library("ontotext-platform@1.0.0-alpha") _
+
+pipeline {
+
+    agent {
+        label 'aws-small'
+    }
+
+    tools {
+        maven 'maven3'
+        jdk 'jdk21'
+    }
+
+    options {
+        disableConcurrentBuilds()
+        timeout(time: 15, unit: 'MINUTES')
+        timestamps()
+    }
+
+    environment {
+        RELEASE_BRANCH = "release/${params.releaseVersion}"
+        KEEPER_CREDENTIALS = 'ksm-jenkins'
+        KEEPER_GITHUB_LOGIN_RECORD = '8hm1g9HCfBPgoWAmpiHn6w'
+        KEEPER_M2_SETTINGS_FILE = 'w6o5mGXWgN7zNvrr6K7QGQ'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Switch to release branch (create or use existing)
+                sh "git checkout ${RELEASE_BRANCH} || git checkout -b ${RELEASE_BRANCH}"
+            }
+        }
+
+        stage('Prepare') {
+            steps {
+                withKeeper(
+                        credentials: env.KEEPER_CREDENTIALS,
+                        envs: [
+                                [record: env.KEEPER_GITHUB_LOGIN_RECORD, prefix: 'GIT', fields: ['login', 'password']],
+                                [record: env.KEEPER_M2_SETTINGS_FILE, files: [[fileName: 'settings.xml']]]
+                        ]
+                ) {
+                    sh "cp ${WORKSPACE}/settings.xml ${HOME}/.m2/settings.xml"
+                    script {
+                        maven.prepareRelease(
+                                releaseVersion: params.releaseVersion,
+                                developmentVersion: params.developmentVersion,
+                                publishJavadoc: params.publishJavadoc,
+                                skipTests: params.skipTests,
+                                gitUsername: env.GIT_LOGIN,
+                                gitPassword: env.GIT_PASSWORD
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Release') {
+            steps {
+                withKeeper(
+                        credentials: env.KEEPER_CREDENTIALS,
+                        envs: [
+                                [record: env.KEEPER_GITHUB_LOGIN_RECORD, prefix: 'GIT', fields: ['login', 'password']]
+                        ]
+                ) {
+                    script {
+                        maven.release(
+                                publishJavadoc: params.publishJavadoc,
+                                gitUsername: env.GIT_LOGIN,
+                                gitPassword: env.GIT_PASSWORD
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            withKeeper(
+                    credentials: env.KEEPER_CREDENTIALS,
+                    envs: [
+                            [record: env.KEEPER_GITHUB_LOGIN_RECORD, prefix: 'GIT', fields: ['login', 'password']]
+                    ]
+            ) {
+                script {
+                    maven.rollbackRelease(
+                            gitUsername: env.GIT_LOGIN,
+                            gitPassword: env.GIT_PASSWORD
+                    )
+                }
+            }
+        }
+
+        always {
+            withUser {
+                sendMail(env.BUILD_USER_EMAIL)
+            }
+        }
+    }
+}
