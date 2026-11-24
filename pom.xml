@@ -14,8 +14,8 @@
     </description>
 
     <properties>
-        <internal.repo>http://maven.ontotext.com/content/repositories/internal</internal.repo>
-        <snapshots.repo>http://maven.ontotext.com/content/repositories/snapshots</snapshots.repo>
+        <internal.repo>https://maven.ontotext.com/content/repositories/internal</internal.repo>
+        <snapshots.repo>https://maven.ontotext.com/content/repositories/snapshots</snapshots.repo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>7.0.10</spring.version>
         <spring-hateoas.version>3.1.3</spring-hateoas.version>
@@ -66,8 +66,8 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git@github.com:Ontotext-AD/hydra-java.git</connection>
-        <developerConnection>scm:git:git@github.com:Ontotext-AD/hydra-java.git</developerConnection>
+        <connection>scm:git:https://github.com/Ontotext-AD/hydra-java.git</connection>
+        <developerConnection>scm:git:https://github.com/Ontotext-AD/hydra-java.git</developerConnection>
         <url>https://github.com/Ontotext-AD/hydra-java</url>
         <tag>HEAD</tag>
     </scm>
